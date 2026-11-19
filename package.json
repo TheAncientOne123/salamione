@@ -1,0 +1,24 @@
+{
+  "name": "agente-riesgo-chatgpt",
+  "version": "1.0.0",
+  "description": "Agente ChatGPT que analiza la documentación de una empresa y genera un dashboard de riesgo que se recalcula al aplicar controles.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.77.0",
+    "pdf-parse": "1.1.1",
+    "puppeteer-core": "^25.18.1"
+  }
+}

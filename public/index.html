@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cyber Cactus</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- =========== Barra superior =========== -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo.svg" alt="" width="36" height="36" />
+        <div class="brand-name"><span class="b-cyber">Cyber</span> Cactus</div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" id="tab-chat" data-view="chat" aria-selected="true" class="on">Chat</button>
+        <button role="tab" id="tab-dashboard" data-view="dashboard" aria-selected="false">Dashboard</button>
+        <button role="tab" id="tab-versions" data-view="versions" aria-selected="false">Versiones <span class="tab-count" id="ver-count" hidden></span></button>
+      </nav>
+      <div class="topbar-right">
+        <button id="health-badge" class="health-badge" data-view="dashboard" hidden title="Ver dashboard">
+          <span class="hb-label" id="hb-label">Índice</span>
+          <strong id="hb-value"></strong>
+          <span id="hb-chip" class="chip"></span>
+        </button>
+        <label class="model-picker" title="Modelo de ChatGPT que usa Cyber Cactus">
+          <span class="status-dot" id="engine-dot"></span>
+          <select id="model-select" aria-label="Modelo de ChatGPT"></select>
+        </label>
+        <button id="btn-reset" class="icon-btn" title="Reiniciar: borra documentos, análisis, controles y chat" aria-label="Reiniciar">↺</button>
+      </div>
+    </header>
+
+    <!-- =========== Vista chat =========== -->
+    <section id="view-chat" class="view chat-view" role="tabpanel" aria-labelledby="tab-chat">
+      <div id="chat-scroll" class="chat-scroll">
+        <div class="chat-inner">
+          <div id="welcome" class="welcome">
+            <img src="logo.svg" alt="Cyber Cactus" width="112" height="112" />
+            <h1>Soy <span class="b-cyber">Cyber</span> Cactus.</h1>
+            <p id="welcome-text">Sigo la pista de los riesgos de tu organización. Adjuntame la documentación con 📎 y te digo qué tan mal están las cosas frente al catálogo.</p>
+            <div class="suggestions" id="suggestions"></div>
+          </div>
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <form id="chat-form" class="composer">
+        <!-- Documentos cargados (fuente de verdad) -->
+        <div class="tray" id="tray" hidden>
+          <div class="tray-docs" id="doc-list"></div>
+          <div class="tray-actions">
+            <span class="tray-stale" id="stale" hidden>Hay documentos nuevos sin analizar</span>
+            <button type="button" id="btn-analyze" class="btn accent small">Analizar documentación</button>
+          </div>
+        </div>
+        <div class="composer-inner">
+          <div class="attach-wrap">
+            <button type="button" class="icon-btn attach" id="chat-attach" aria-haspopup="menu" aria-expanded="false" title="Agregar documentos a la fuente de verdad" aria-label="Agregar documentos">📎</button>
+            <div class="attach-menu" id="attach-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-attach="file">📄 Subir archivos <small id="supported">PDF, DOCX, TXT…</small></button>
+              <button type="button" role="menuitem" data-attach="paste">📝 Pegar texto</button>
+            </div>
+          </div>
+          <input id="file-input" type="file" multiple hidden />
+          <textarea id="chat-input" rows="1" placeholder="Preguntale a Cyber Cactus…" autocomplete="off"></textarea>
+          <button class="btn primary send" id="chat-send" aria-label="Enviar">Enviar</button>
+        </div>
+        <p class="composer-hint small" id="composer-hint">Cyber Cactus usa solo tu documentación como fuente de verdad. Podés arrastrar archivos al chat.</p>
+      </form>
+      <div class="drop-hint" id="drop-hint" hidden><div>Soltá los archivos para agregarlos a la fuente de verdad</div></div>
+    </section>
+
+    <!-- =========== Vista dashboard =========== -->
+    <section id="view-dashboard" class="view dash-view" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+      <div class="dash-inner" id="dash-inner">
+        <section id="empty" class="card empty">
+          <img src="logo.svg" alt="" width="80" height="80" />
+          <h2>Todavía no hay caso abierto</h2>
+          <p class="muted">Adjuntá la documentación desde el chat (📎) y presioná <strong>Analizar documentación</strong>.</p>
+          <button class="btn primary" data-view="chat">Ir al chat</button>
+        </section>
+
+        <div id="dashboard" hidden>
+          <section class="card hero">
+            <div class="hero-text">
+              <p class="eyebrow" id="catalog-title"></p>
+              <h2 id="company-name"></h2>
+              <p class="muted small" id="company-sector"></p>
+              <ul id="summary" class="summary"></ul>
+              <p class="muted small" id="generated"></p>
+              <p class="notice-inline small" id="analysis-warning" hidden></p>
+            </div>
+            <div class="hero-score">
+              <p class="eyebrow">Índice de cumplimiento</p>
+              <div class="hero-number"><span id="health">–</span><span class="of">/100</span></div>
+              <span id="health-chip" class="chip"></span>
+              <div class="meter" aria-hidden="true">
+                <div class="meter-track"></div>
+                <div class="meter-fill" id="meter-fill"></div>
+                <div class="meter-ghost" id="meter-ghost" title="Según documentación"></div>
+              </div>
+              <p class="small" id="health-delta"></p>
+              <button class="btn accent pdf-btn" id="btn-pdf">Descargar PDF ejecutivo</button>
+              <button class="btn pdf-btn" id="btn-save-version">Guardar versión</button>
+            </div>
+          </section>
+
+          <section class="kpis" id="kpis"></section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2 id="controls-title">Controles del catálogo</h2>
+                <p class="muted small" id="controls-sub"></p>
+              </div>
+              <div class="legend small" id="map-legend"></div>
+            </div>
+            <div class="ctrl-grid" id="ctrl-grid"></div>
+            <p class="muted small" id="scope-note"></p>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>Prioridades</h2>
+                <p class="muted small">Salvaguardas pendientes con mayor mejora del índice si se implementan por completo.</p>
+              </div>
+            </div>
+            <div id="priorities" class="priorities"></div>
+          </section>
+
+          <section class="card" id="safeguards-card">
+            <div class="card-head">
+              <div>
+                <h2>Salvaguardas y controles aplicados</h2>
+                <p class="muted small">El estado inicial surge de la documentación, con citas verificadas. Marcá qué aplicó la organización y el dashboard se recalcula al instante.</p>
+              </div>
+              <div class="seg" role="radiogroup" aria-label="Filtrar salvaguardas">
+                <button data-sfilter="all" class="on">Todas</button>
+                <button data-sfilter="gaps">Brechas</button>
+                <button data-sfilter="sin_evidencia">Sin evidencia</button>
+                <button data-sfilter="applied">Aplicadas</button>
+              </div>
+            </div>
+            <div id="safeguards" class="sg-groups"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========== Vista versiones =========== -->
+    <section id="view-versions" class="view dash-view" role="tabpanel" aria-labelledby="tab-versions" hidden>
+      <div class="dash-inner">
+        <section id="v-empty" class="card empty">
+          <img src="logo.svg" alt="" width="80" height="80" />
+          <h2>Todavía no hay versiones</h2>
+          <p class="muted">Cada análisis guarda una versión automáticamente. Después de aplicar controles, guardá otra versión para comparar el antes y el después.</p>
+          <button class="btn primary" data-view="chat">Ir al chat</button>
+        </section>
+
+        <div id="versions" class="ver-layout" hidden>
+          <aside class="card ver-list">
+            <div>
+              <h2>Historial de versiones</h2>
+              <p class="muted small">Cada versión guarda el diagnóstico y los controles aplicados en ese momento.</p>
+            </div>
+            <form id="ver-form" class="ver-form">
+              <input id="ver-name" class="input" maxlength="80" placeholder="Nombre (ej. Después de MFA)" />
+              <button class="btn primary" type="submit">Guardar estado actual</button>
+            </form>
+            <ol id="ver-items" class="ver-items" reversed></ol>
+          </aside>
+
+          <section class="card ver-compare">
+            <div class="card-head">
+              <div>
+                <h2>Comparación de controles</h2>
+                <p class="muted small">Elegí dos versiones, o una versión y el estado actual, para ver qué cambió al aplicar controles.</p>
+              </div>
+            </div>
+            <div class="cmp-pickers">
+              <label><span class="cmp-tag a">A</span><select id="cmp-a" class="input" aria-label="Versión A (referencia)"></select></label>
+              <button type="button" class="icon-btn" id="cmp-swap" title="Intercambiar A y B" aria-label="Intercambiar A y B">⇄</button>
+              <label><span class="cmp-tag b">B</span><select id="cmp-b" class="input" aria-label="Versión B (comparada)"></select></label>
+            </div>
+            <div id="cmp-body" class="cmp-body"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Pegar texto como documento -->
+  <dialog id="paste-dialog" class="dialog">
+    <form method="dialog" id="paste-form">
+      <h2>Pegar texto como documento</h2>
+      <input id="paste-name" class="input" placeholder="Nombre (ej. Acta de directorio)" />
+      <textarea id="paste-text" class="input" rows="10" placeholder="Pegá el contenido…" required></textarea>
+      <div class="row end">
+        <button type="button" class="btn" id="paste-cancel">Cancelar</button>
+        <button type="submit" class="btn primary" value="ok">Agregar a la fuente de verdad</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Carga a pantalla completa -->
+  <div id="loader" class="loader" hidden role="alertdialog" aria-live="assertive" aria-busy="true">
+    <div class="loader-box">
+      <div class="spinner"><img src="logo.svg" alt="" /></div>
+      <p class="loader-title" id="loader-title">Cyber Cactus está analizando…</p>
+      <p class="loader-sub" id="loader-sub"></p>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
