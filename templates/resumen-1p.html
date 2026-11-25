@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  PDF de UNA página (carta, vertical) que genera el chat cuando el usuario pide un PDF.
+  El contenido (título, encabezado y secciones) lo redacta el agente siguiendo la instrucción del chat;
+  src/pdfsummary.js lo completa acá y verifica que el resultado tenga exactamente una página.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>{{titulo}}</title>
+  <style>{{css}}</style>
+</head>
+<body>
+  <main class="sheet" id="sheet">
+    <header class="head">
+      <div class="logo">{{logo}}</div>
+      <div class="head-main">
+        <h1>{{titulo}}</h1>
+        {{subtitulo}}
+        {{datos}}
+      </div>
+    </header>
+    {{secciones}}
+    <footer class="foot">{{pie}}</footer>
+  </main>
+</body>
+</html>

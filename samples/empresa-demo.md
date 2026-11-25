@@ -1,7 +1,8 @@
 # Informe interno de situación — Distribuidora Andina S.A.
 
 Empresa: Distribuidora Andina S.A.
-Sector: distribución mayorista de alimentos. 140 empleados, 3 depósitos.
+Sector: distribución mayorista de alimentos. 140 empleados, 3 depósitos ubicados en Mendoza, San Juan y San Luis.
+Los procesos críticos son la facturación, la gestión de stock y la logística en cadena de frío.
 Fecha del informe: octubre 2026. Preparado por: Gerencia de Administración.
 
 ## 1. Situación financiera
@@ -26,6 +27,8 @@ Los usuarios de empleados que se fueron no se dan de baja en el ERP.
 Todos los empleados usan sus PCs con permisos de administrador local.
 El correo corporativo es Google Workspace y los navegadores se actualizan automáticamente.
 Ante el ransomware no había un responsable designado ni un procedimiento para reportar incidentes; se improvisó.
+No se cuenta con registros de auditoría (logs) centralizados de los servidores.
+La empresa no utiliza medios removibles: los puertos USB están bloqueados por política desde 2025.
 
 ## 3. Operaciones y continuidad
 No existe un plan de continuidad del negocio ni un procedimiento de recuperación ante desastres.

@@ -1,38 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cyber Cactus">
-  <title>Cyber Cactus</title>
-  <!-- brazos del cactus -->
-  <g fill="#2f9e57">
-    <rect x="7" y="22" width="8" height="18" rx="4"/>
-    <rect x="9" y="33" width="14" height="7" rx="3.5"/>
-    <rect x="49" y="17" width="8" height="17" rx="4"/>
-    <rect x="41" y="27" width="14" height="7" rx="3.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SalamiOne">
+  <title>SalamiOne</title>
+  <!-- tripa (anillo exterior) -->
+  <circle cx="32" cy="32" r="30" fill="#5e1229"/>
+  <!-- rodaja -->
+  <circle cx="32" cy="32" r="26" fill="#a3254b"/>
+  <!-- barrido de radar -->
+  <path d="M32 32 L32 6 A26 26 0 0 1 54.5 19 Z" fill="#ffffff" opacity="0.16"/>
+  <!-- anillos de radar -->
+  <circle cx="32" cy="32" r="17.5" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="1.2"/>
+  <circle cx="32" cy="32" r="9" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="1.2"/>
+  <!-- grasa = puntos detectados -->
+  <g fill="#f6dccd">
+    <circle cx="42.5" cy="17.5" r="3.2"/>
+    <circle cx="19" cy="24" r="2.4"/>
+    <circle cx="23" cy="43" r="2.9"/>
+    <circle cx="44" cy="40" r="2.2"/>
+    <circle cx="35" cy="50" r="1.8"/>
+    <circle cx="14" cy="35" r="1.5"/>
   </g>
-  <!-- cuerpo -->
-  <rect x="21" y="12" width="22" height="46" rx="11" fill="#2f9e57"/>
-  <rect x="30" y="16" width="4" height="16" rx="2" fill="#3fbf6f" opacity=".7"/>
-  <!-- espinas -->
-  <g stroke="#d6f5c8" stroke-width="1.2" stroke-linecap="round">
-    <path d="M7 27h-2M7 33h-2M57 22h2M57 28h2M11 22v-2M53 17v-2M21 30h-2M43 30h2"/>
-  </g>
-  <!-- gabardina -->
-  <path d="M20 37 Q32 34 44 37 L48 60 Q32 63 16 60 Z" fill="#c9893f"/>
-  <path d="M25 36 L32 47 L39 36 L35 35.3 L32 41 L29 35.3 Z" fill="#9e6427"/>
-  <path d="M32 47 V61" stroke="#9e6427" stroke-width="1.2"/>
-  <rect x="17.6" y="49" width="28.8" height="3.6" fill="#7a4a1c"/>
-  <rect x="29.5" y="48.3" width="5" height="5" rx="1" fill="none" stroke="#f08a2c" stroke-width="1.4"/>
-  <g fill="#7a4a1c"><circle cx="28.5" cy="44" r="1"/><circle cx="35.5" cy="44" r="1"/><circle cx="28.5" cy="56" r="1"/><circle cx="35.5" cy="56" r="1"/></g>
-  <!-- cuello levantado -->
-  <path d="M20 37 L24 33 L27 37.5 Z M44 37 L40 33 L37 37.5 Z" fill="#b5772f"/>
-  <!-- lentes oscuros -->
-  <path d="M22.5 21.5 H31 V24 Q31 27.5 27 27.5 Q22.5 27.5 22.5 24 Z" fill="#101410"/>
-  <path d="M33 21.5 H41.5 V24 Q41.5 27.5 37.5 27.5 Q33 27.5 33 24 Z" fill="#101410"/>
-  <path d="M31 22.3 H33" stroke="#101410" stroke-width="1.4"/>
-  <path d="M24.3 23 L26.3 23 M34.8 23 L36.8 23" stroke="#f08a2c" stroke-width="1" stroke-linecap="round"/>
-  <!-- sonrisa ladeada -->
-  <path d="M29 31.2 Q33 32.6 36 30.4" fill="none" stroke="#14532d" stroke-width="1.3" stroke-linecap="round"/>
-  <!-- fedora -->
-  <ellipse cx="32" cy="15.5" rx="17" ry="3.6" fill="#262a26"/>
-  <path d="M23.5 15.5 Q23 6 27 4.6 Q32 6.4 37 4.6 Q41 6 40.5 15.5 Z" fill="#30352f"/>
-  <path d="M23.7 11.6 H40.3 V14.6 H23.7 Z" fill="#f08a2c"/>
-  <path d="M29 5.4 Q32 8 35 5.4" fill="none" stroke="#1d201d" stroke-width="1"/>
+  <!-- centro: "1" -->
+  <circle cx="32" cy="32" r="4.2" fill="#f6dccd"/>
+  <path d="M31.2 30.2 L32.9 29.2 L32.9 34.8" fill="none" stroke="#5e1229" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  Plantilla FIJA del resumen ejecutivo estandarizado de UNA página (carta, vertical).
+  Secciones en el orden exigido: 1 encabezado · 2 contexto · 3 indicadores y distribución ·
+  4 cinco brechas o riesgos · 5 cinco recomendaciones · 6 tres incertidumbres · 7 conclusión.
+  Los marcadores entre llaves dobles los completa src/onepager.js con datos verificados de la evaluación.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>{{titulo}}</title>
+  <style>{{css}}</style>
+</head>
+<body>
+  <main class="sheet" id="sheet">
+    <!-- 1. Encabezado de identificación -->
+    <header class="head">
+      <div class="logo">{{logo}}</div>
+      <div class="head-main">
+        <h1><span class="n1">1</span>Resumen ejecutivo · Diagnóstico de ciberseguridad {{marco}}</h1>
+        <div class="id-grid">
+          <span><b>Organización:</b> {{empresa}}</span>
+          <span><b>Preparado por:</b> {{preparadoPor}} · {{motor}}</span>
+          <span><b>Fecha de corte:</b> {{fechaCorte}}</span>
+          <span><b>Versión:</b> {{version}}</span>
+          <span><b>Alcance:</b> {{alcance}}</span>
+          <span><b>Emitido:</b> {{emitido}} · <b>Fuente:</b> {{fuente}}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. Contexto empresarial -->
+    <section>
+      <h2><span class="n">2</span>Contexto empresarial</h2>
+      <ul class="tight">{{contexto}}</ul>
+    </section>
+
+    <!-- 3. Indicadores y distribución -->
+    <section>
+      <h2><span class="n">3</span>Indicadores y distribución · {{marco}}</h2>
+      <div class="ind-row">{{indicadores}}</div>
+      <div class="dist">{{distribucion}}</div>
+      <div class="dist-legend">{{leyenda}}</div>
+    </section>
+
+    <div class="two">
+      <!-- 4. Cinco brechas o riesgos prioritarios -->
+      <section>
+        <h2><span class="n">4</span>Cinco brechas o riesgos prioritarios</h2>
+        <ol class="items">{{riesgos}}</ol>
+      </section>
+      <!-- 5. Cinco recomendaciones -->
+      <section>
+        <h2><span class="n">5</span>Cinco recomendaciones</h2>
+        <ol class="items">{{recomendaciones}}</ol>
+      </section>
+    </div>
+
+    <!-- 6. Tres incertidumbres -->
+    <section>
+      <h2><span class="n">6</span>Tres incertidumbres</h2>
+      <ol class="items">{{incertidumbres}}</ol>
+    </section>
+
+    <!-- 7. Conclusión ejecutiva -->
+    <section class="concl">
+      <h2><span class="n">7</span>Conclusión ejecutiva</h2>
+      <p>{{conclusion}}</p>
+    </section>
+
+    <footer class="foot">{{pie}}</footer>
+  </main>
+</body>
+</html>

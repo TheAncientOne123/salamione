@@ -1,0 +1,62 @@
+/* Reporte ejecutivo de UNA página, tamaño carta, vertical. */
+@page { size: Letter portrait; margin: 0; }
+:root {
+  --ink: #17191c; --ink-2: #4b4f57; --muted: #80858d; --grid: #e6e1e0; --soft: #f3efee;
+  --brand: #8c1d40; --dark: #1e2126; --accent: #b8324f;
+  --s-bajo: #0ca30c; --s-medio: #fab219; --s-alto: #ec835a; --s-critico: #d03b3b;
+}
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; }
+body { font: 10.4px/1.42 'Segoe UI', Arial, sans-serif; color: var(--ink); }
+/* La hoja mide exactamente una carta (8.5 × 11 in) con 0.45 in de margen. */
+.sheet { width: 8.5in; height: 11in; padding: 0.42in 0.45in 0.36in; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+h1, h2, p, ul, ol { margin: 0; }
+b { font-weight: 700; }
+
+.head { display: flex; gap: 10px; align-items: center; background: var(--dark); color: #fff; border-radius: 8px; padding: 8px 12px; }
+.logo svg { width: 46px; height: 46px; display: block; }
+.head-main { flex: 1; min-width: 0; }
+.head h1 { font-size: 14px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+.id-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 14px; font-size: 8.6px; color: #d9dce1; }
+.id-grid b { color: #f2a8b5; font-weight: 700; }
+
+section { border: 1px solid var(--grid); border-radius: 7px; padding: 6px 9px; }
+h2 { font-size: 11.5px; font-weight: 800; color: var(--dark); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+h2 .n { display: inline-flex; width: 15px; height: 15px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 9px; align-items: center; justify-content: center; }
+.tight { padding-left: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 1px 14px; }
+.ref { color: var(--muted); font-size: 7.8px; white-space: nowrap; }
+
+.ind-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 5px; }
+.ind { background: var(--soft); border-radius: 6px; padding: 4px 6px; }
+.ind .l { font-size: 7.6px; color: var(--ink-2); font-weight: 600; line-height: 1.2; }
+.ind .v { font-size: 15px; font-weight: 800; line-height: 1.15; }
+.ind.main { background: var(--dark); color: #fff; }
+.ind.main .l { color: #c9ccd3; }
+.dist { display: flex; height: 13px; border-radius: 4px; overflow: hidden; }
+.dist i { display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 7.5px; font-weight: 700; color: #fff; min-width: 0; }
+.dist .implementado { background: var(--s-bajo); }
+.dist .parcial { background: var(--s-medio); color: #0b0b0b; }
+.dist .no_implementado { background: var(--s-critico); }
+.dist .no_verificado { background: #bfc2c8; color: #0b0b0b; }
+.dist .no_aplicable { background: #e7e8ea; color: #4b4f57; }
+.dist-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 3px; font-size: 7.8px; color: var(--ink-2); }
+.dist-legend .sq { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.items { padding-left: 15px; display: flex; flex-direction: column; gap: 2.5px; }
+.items li::marker { font-weight: 800; color: var(--accent); }
+.tag { display: inline-block; font-size: 7.4px; font-weight: 700; border-radius: 99px; padding: 0 5px; margin-left: 3px; vertical-align: 1px; }
+.tag.alta { background: var(--s-critico); color: #fff; }
+.tag.media { background: var(--s-alto); color: #0b0b0b; }
+.tag.baja { background: var(--s-medio); color: #0b0b0b; }
+.tag.qw { background: #f7e3e8; color: var(--brand); }
+.tag.pr { background: #f4ece6; color: var(--ink); }
+.sub { color: var(--ink-2); }
+
+.concl { border-color: var(--accent); background: #fbf1f3; }
+.foot { margin-top: auto; font-size: 7.4px; color: var(--muted); border-top: 1px solid var(--grid); padding-top: 3px; }
+
+.n1 { display: inline-flex; width: 16px; height: 16px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 9.5px; align-items: center; justify-content: center; margin-right: 6px; vertical-align: 1px; }
+.sheet { gap: 8px; }
+section { padding: 7px 10px; }
+.ind .v { font-size: 17px; }

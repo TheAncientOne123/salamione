@@ -1,26 +1,8 @@
 {
-  "_comentario": "Valoración del índice. valoresEstado: puntaje 0-100 de cada estado de salvaguarda. pesosControl: peso relativo de cada control CIS en el índice global (por defecto = cantidad de salvaguardas IG1, o sea que las 56 salvaguardas pesan igual). Editá y reiniciá el servidor.",
+  "_comentario": "Valor de cada estado para el indicador de Implementación = suma de valores / (I + P + N) × 100. 'No verificado' y 'No aplicable' no tienen valor: quedan fuera de la implementación (regla R8). Editá y reiniciá el servidor.",
   "valoresEstado": {
-    "implementado": 100,
-    "parcial": 50,
-    "no_implementado": 0,
-    "sin_evidencia": 0
-  },
-  "pesosControl": {
-    "1": 2,
-    "2": 3,
-    "3": 6,
-    "4": 7,
-    "5": 4,
-    "6": 5,
-    "7": 4,
-    "8": 3,
-    "9": 2,
-    "10": 3,
-    "11": 4,
-    "12": 1,
-    "14": 8,
-    "15": 1,
-    "17": 3
+    "implementado": 1,
+    "parcial": 0.5,
+    "no_implementado": 0
   }
 }

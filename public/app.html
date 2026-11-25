@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SalamiOne</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- =========== Barra superior =========== -->
+    <header class="topbar">
+      <div class="brand">
+        <a href="/" class="brand-link" aria-label="SalamiOne, inicio"><img src="logo.svg" alt="" width="34" height="34" /><span class="brand-name">Salami<span class="b-one">One</span></span></a>
+        <div class="ws-wrap" data-tour="workspace">
+          <button type="button" class="ws-btn" id="ws-btn" aria-haspopup="menu" aria-expanded="false">
+            <span class="ws-name" id="ws-name">Evaluación</span><span class="ig-pill" id="ws-ig">IG1</span><span aria-hidden="true">▾</span>
+          </button>
+          <div class="menu ws-menu" id="ws-menu" role="menu" hidden>
+            <p class="menu-label">Tus evaluaciones</p>
+            <div id="ws-list"></div>
+            <div class="menu-sep"></div>
+            <button type="button" role="menuitem" id="ws-new">＋ Nueva evaluación</button>
+            <button type="button" role="menuitem" id="ws-edit">Renombrar o cambiar IG</button>
+            <button type="button" role="menuitem" id="ws-delete" class="danger">Eliminar esta evaluación</button>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist" data-tour="tabs">
+        <button role="tab" id="tab-chat" data-view="chat" aria-selected="true" class="on">Chat</button>
+        <button role="tab" id="tab-dashboard" data-view="dashboard" aria-selected="false">Dashboard</button>
+        <button role="tab" id="tab-versions" data-view="versions" aria-selected="false">Comparar <span class="tab-count" id="ver-count" hidden></span></button>
+      </nav>
+      <div class="topbar-right">
+        <button id="health-badge" class="health-badge" data-view="dashboard" hidden title="Ver dashboard">
+          <span class="hb-label">Implementación</span><strong id="hb-value"></strong><span class="hb-label">· Cobertura</span><strong id="hb-cov"></strong>
+        </button>
+        <button type="button" class="ai-pill" id="ai-pill" data-tour="ai" title="Configuración de IA">
+          <span class="status-dot" id="engine-dot"></span><span id="ai-label">Motor demo</span>
+        </button>
+        <div class="user-wrap">
+          <button type="button" class="avatar-btn" id="user-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Menú de usuario"><span id="user-initial">?</span></button>
+          <div class="menu user-menu" id="user-menu" role="menu" hidden>
+            <p class="menu-label" id="user-email"></p>
+            <button type="button" role="menuitem" id="m-ai">Configuración de IA</button>
+            <button type="button" role="menuitem" id="m-tour">Ver el tutorial</button>
+            <button type="button" role="menuitem" id="m-reset">Vaciar esta evaluación</button>
+            <div class="menu-sep"></div>
+            <button type="button" role="menuitem" id="m-logout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =========== Vista chat =========== -->
+    <section id="view-chat" class="view chat-view" role="tabpanel" aria-labelledby="tab-chat">
+      <div id="chat-scroll" class="chat-scroll">
+        <div class="chat-inner">
+          <div id="welcome" class="welcome">
+            <img src="logo.svg" alt="" width="88" height="88" />
+            <h1 id="welcome-title">Tu asesor en CIS Controls v8.1</h1>
+            <p id="welcome-text">Sube la documentación de la organización o descríbela aquí mismo. Evalúo cada salvaguarda del Implementation Group elegido, con citas verificadas, y armo el dashboard.</p>
+            <div class="suggestions" id="suggestions"></div>
+          </div>
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <form id="chat-form" class="composer" data-tour="composer">
+        <div class="tray" id="tray" hidden>
+          <div class="tray-docs" id="doc-list"></div>
+          <div class="tray-actions">
+            <span class="tray-stale" id="stale" hidden>Hay documentos de contexto sin analizar</span>
+            <button type="button" id="btn-analyze" class="btn accent small">Analizar documentación</button>
+          </div>
+        </div>
+        <div class="chat-eval" id="chat-eval" hidden>
+          <span>¿Describiste tu organización? Puedo convertir lo que escribiste en un dashboard.</span>
+          <button type="button" class="btn primary small" id="btn-chat-eval">Generar dashboard con esta descripción</button>
+        </div>
+        <div class="composer-inner">
+          <div class="attach-wrap">
+            <button type="button" class="icon-btn attach" id="chat-attach" aria-haspopup="menu" aria-expanded="false" title="Agregar documentos" aria-label="Agregar documentos">📎</button>
+            <div class="attach-menu" id="attach-menu" role="menu" hidden>
+              <button type="button" role="menuitem" data-attach="context">Documento de contexto <small>Base de la evaluación (políticas, informes, inventarios)</small></button>
+              <button type="button" role="menuitem" data-attach="evidence">Nueva evidencia <small>Avance o cambios: propone actualizaciones sin rehacer el diagnóstico</small></button>
+              <button type="button" role="menuitem" data-attach="paste">Pegar texto <small id="supported">PDF, DOCX, TXT…</small></button>
+              <button type="button" role="menuitem" data-attach="sample">Cargar caso de ejemplo <small>Distribuidora Andina S.A. (PDF de muestra)</small></button>
+            </div>
+          </div>
+          <input id="file-input" type="file" multiple hidden />
+          <textarea id="chat-input" rows="1" placeholder="Pregunta sobre CIS Controls o describe tu organización…" autocomplete="off"></textarea>
+          <button class="btn primary send" id="chat-send" aria-label="Enviar">Enviar</button>
+        </div>
+        <p class="composer-hint small" id="composer-hint"></p>
+      </form>
+      <div class="drop-hint" id="drop-hint" hidden><div>Suelta los archivos para agregarlos como documento de contexto</div></div>
+    </section>
+
+    <!-- =========== Vista dashboard =========== -->
+    <section id="view-dashboard" class="view dash-view" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+      <div class="dash-inner" id="dash-inner">
+        <section id="empty" class="card empty">
+          <img src="logo.svg" alt="" width="72" height="72" />
+          <h2>Todavía no hay dashboard</h2>
+          <p class="muted">Sube un documento de contexto desde el chat (📎), describe tu organización en un mensaje o carga el caso de ejemplo.</p>
+          <div class="row center">
+            <button class="btn primary" data-view="chat">Ir al chat</button>
+            <button class="btn" id="btn-sample-empty">Cargar caso de ejemplo</button>
+          </div>
+        </section>
+
+        <div id="dashboard" hidden>
+          <section class="card hero">
+            <div class="hero-text">
+              <p class="eyebrow" id="catalog-title"></p>
+              <h2 id="company-name"></h2>
+              <p class="muted small" id="company-sector"></p>
+              <ul id="summary" class="summary"></ul>
+              <p class="muted small" id="generated"></p>
+              <p class="notice-inline small" id="analysis-warning" hidden></p>
+            </div>
+            <div class="hero-actions" data-tour="export">
+              <p class="eyebrow">Exportar</p>
+              <a class="btn primary" id="btn-pdf" href="/api/export/dashboard.pdf">Dashboard en PDF</a>
+              <a class="btn" id="btn-xlsx" href="/api/export/dashboard.xlsx">Dashboard en Excel</a>
+              <button class="btn accent" id="btn-1p">Resumen ejecutivo (1 página)</button>
+              <button class="btn ghost" id="btn-save-version">Guardar versión</button>
+            </div>
+          </section>
+
+          <section class="inds" id="indicators"></section>
+          <section class="kpis kpis-5" id="kpis"></section>
+
+          <section class="card" id="proposal-card" hidden>
+            <div class="card-head">
+              <div>
+                <h2>Actualización con nueva evidencia</h2>
+                <p class="muted small" id="proposal-sub"></p>
+              </div>
+              <div class="row">
+                <button class="btn" id="btn-discard-proposal">Descartar</button>
+                <button class="btn primary" id="btn-apply-proposal">Aplicar cambios aprobados</button>
+              </div>
+            </div>
+            <div id="reported"></div>
+            <div class="table-wrap" id="changes"></div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2 id="controls-title">Implementación por control</h2>
+                <p class="muted small" id="controls-sub"></p>
+              </div>
+              <div class="legend small" id="map-legend"></div>
+            </div>
+            <div class="ctrl-grid" id="ctrl-grid"></div>
+            <p class="muted small" id="scope-note"></p>
+          </section>
+
+          <section class="card">
+            <h2>Cinco riesgos principales</h2>
+            <div class="table-wrap" id="risks"></div>
+          </section>
+
+          <section class="card">
+            <h2>Roadmap de cinco iniciativas</h2>
+            <div class="table-wrap" id="roadmap"></div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>Ficha de contexto</h2>
+                <p class="muted small">Cada afirmación tiene una cita verificada del documento. Lo que falta queda como restricción.</p>
+              </div>
+            </div>
+            <div id="context"></div>
+          </section>
+
+          <section class="card" id="safeguards-card">
+            <div class="card-head">
+              <div>
+                <h2 id="matrix-title">Matriz de salvaguardas</h2>
+                <p class="muted small">Estado según evidencia, con citas verificadas. Los botones simulan controles aplicados (no reemplazan la evidencia).</p>
+              </div>
+              <div class="seg" role="radiogroup" aria-label="Filtrar salvaguardas">
+                <button data-sfilter="all" class="on">Todas</button>
+                <button data-sfilter="gaps">Brechas</button>
+                <button data-sfilter="no_verificado">No verificadas</button>
+                <button data-sfilter="updated">Actualizadas</button>
+                <button data-sfilter="applied">Simuladas</button>
+              </div>
+            </div>
+            <div id="safeguards" class="sg-groups"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========== Vista comparar =========== -->
+    <section id="view-versions" class="view dash-view" role="tabpanel" aria-labelledby="tab-versions" hidden>
+      <div class="dash-inner">
+        <section id="v-empty" class="card empty">
+          <img src="logo.svg" alt="" width="72" height="72" />
+          <h2>Todavía no hay versiones para comparar</h2>
+          <p class="muted">La evaluación inicial se guarda sola como versión. Después sube nueva evidencia (o un documento actualizado) y compara el antes y el después.</p>
+          <button class="btn primary" data-view="chat">Ir al chat</button>
+        </section>
+
+        <div id="versions" class="ver-layout" hidden>
+          <aside class="card ver-list">
+            <div>
+              <h2>Historial de versiones</h2>
+              <p class="muted small">Cada versión conserva la matriz, los indicadores, los riesgos y el roadmap de ese momento.</p>
+            </div>
+            <form id="ver-form" class="ver-form">
+              <input id="ver-name" class="input" maxlength="80" placeholder="Nombre (p. ej. Después de MFA)" />
+              <button class="btn primary" type="submit">Guardar estado actual</button>
+            </form>
+            <ol id="ver-items" class="ver-items" reversed></ol>
+          </aside>
+
+          <section class="card ver-compare">
+            <div class="card-head">
+              <div>
+                <h2>Antes y después</h2>
+                <p class="muted small">Elige la versión de referencia (A) y la comparada (B). El veredicto indica si los cambios mejoraron o empeoraron la postura.</p>
+              </div>
+              <div class="row">
+                <a class="btn small" id="cmp-pdf" href="#">PDF</a>
+                <a class="btn small" id="cmp-xlsx" href="#">Excel</a>
+              </div>
+            </div>
+            <div class="cmp-pickers">
+              <label><span class="cmp-tag a">A</span><select id="cmp-a" class="input" aria-label="Versión A (antes)"></select></label>
+              <button type="button" class="icon-btn" id="cmp-swap" title="Intercambiar A y B" aria-label="Intercambiar A y B">⇄</button>
+              <label><span class="cmp-tag b">B</span><select id="cmp-b" class="input" aria-label="Versión B (después)"></select></label>
+            </div>
+            <div id="cmp-body" class="cmp-body"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Pegar texto como documento -->
+  <dialog id="paste-dialog" class="dialog">
+    <form method="dialog" id="paste-form">
+      <h2>Pegar texto como documento</h2>
+      <label class="field"><span>Nombre</span><input id="paste-name" class="input" placeholder="p. ej. Política de respaldos" /></label>
+      <label class="field"><span>Tipo</span>
+        <select id="paste-role" class="input">
+          <option value="contexto">Documento de contexto (evaluación inicial)</option>
+          <option value="evidencia">Nueva evidencia (avance o cambios)</option>
+        </select>
+      </label>
+      <label class="field"><span>Contenido</span><textarea id="paste-text" class="input" rows="10" placeholder="Pega el contenido…" required></textarea></label>
+      <div class="row end">
+        <button type="button" class="btn" id="paste-cancel">Cancelar</button>
+        <button type="submit" class="btn primary" value="ok">Agregar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Nueva evaluación / editar -->
+  <dialog id="ws-dialog" class="dialog">
+    <form method="dialog" id="ws-form">
+      <h2 id="ws-dialog-title">Nueva evaluación</h2>
+      <label class="field"><span>Nombre de la organización o evaluación</span><input id="ws-input-name" class="input" maxlength="80" required placeholder="p. ej. Acme S.A. · 2026" /></label>
+      <fieldset class="ig-choices">
+        <legend>Implementation Group objetivo</legend>
+        <label class="ig-choice"><input type="radio" name="ig" value="1" checked /><span><b>IG1 · 56 salvaguardas</b><small>Higiene cibernética esencial. Pymes, TI limitada, datos de baja sensibilidad.</small></span></label>
+        <label class="ig-choice"><input type="radio" name="ig" value="2" /><span><b>IG2 · 130 salvaguardas</b><small>Varias áreas o sedes, datos sensibles de clientes, requisitos regulatorios.</small></span></label>
+        <label class="ig-choice"><input type="radio" name="ig" value="3" /><span><b>IG3 · 153 salvaguardas</b><small>Equipo de seguridad propio, datos o servicios críticos, alta exposición.</small></span></label>
+      </fieldset>
+      <p class="muted small" id="ws-ig-note" hidden>Si cambias el IG de una evaluación existente, vuelve a analizar la documentación para evaluar las salvaguardas nuevas.</p>
+      <div class="row end">
+        <button type="button" class="btn" id="ws-cancel">Cancelar</button>
+        <button type="submit" class="btn primary" value="ok" id="ws-submit">Crear evaluación</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Configuración de IA -->
+  <dialog id="ai-dialog" class="dialog wide">
+    <form method="dialog" id="ai-form">
+      <h2>Conecta tu modelo de IA</h2>
+      <p class="muted small">SalamiOne funciona con tu propia cuenta. La API key se guarda cifrada en el servidor y nunca vuelve al navegador.</p>
+      <div class="prov-grid" id="prov-grid" role="radiogroup" aria-label="Proveedor"></div>
+      <div id="ai-fields">
+        <label class="field" id="f-key"><span>API key <a id="key-link" href="#" target="_blank" rel="noopener">Obtener una</a></span>
+          <input id="ai-key" class="input" type="password" autocomplete="off" placeholder="" />
+          <small class="muted" id="key-hint"></small>
+        </label>
+        <label class="field" id="f-url"><span>URL base</span><input id="ai-url" class="input" placeholder="http://localhost:11434/v1" /></label>
+        <label class="field"><span>Modelo <button type="button" class="link-btn" id="ai-load-models">Cargar modelos disponibles</button></span>
+          <input id="ai-model" class="input" list="ai-models" placeholder="" />
+          <datalist id="ai-models"></datalist>
+        </label>
+      </div>
+      <p class="ai-result small" id="ai-result" hidden></p>
+      <div class="row between">
+        <button type="button" class="btn ghost" id="ai-test">Probar conexión</button>
+        <div class="row">
+          <button type="button" class="btn" id="ai-cancel">Cancelar</button>
+          <button type="submit" class="btn primary" value="ok">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Confirmación (reemplaza confirm()) -->
+  <dialog id="confirm-dialog" class="dialog">
+    <form method="dialog">
+      <h2 id="confirm-title">¿Continuar?</h2>
+      <p class="muted" id="confirm-text"></p>
+      <div class="row end">
+        <button value="no" class="btn">Cancelar</button>
+        <button value="yes" class="btn primary" id="confirm-ok">Continuar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Tutorial -->
+  <div id="tour" class="tour" hidden>
+    <div class="tour-spot" id="tour-spot"></div>
+    <div class="tour-card" id="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <p class="eyebrow" id="tour-step"></p>
+      <h2 id="tour-title"></h2>
+      <p id="tour-text"></p>
+      <div class="row between">
+        <button type="button" class="link-btn" id="tour-skip">Saltar tutorial</button>
+        <div class="row">
+          <button type="button" class="btn small" id="tour-prev">Anterior</button>
+          <button type="button" class="btn primary small" id="tour-next">Siguiente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carga a pantalla completa -->
+  <div id="loader" class="loader" hidden role="alertdialog" aria-live="assertive" aria-busy="true">
+    <div class="loader-box">
+      <div class="spinner"><img src="logo.svg" alt="" /></div>
+      <p class="loader-title" id="loader-title">Analizando…</p>
+      <p class="loader-sub" id="loader-sub"></p>
+    </div>
+  </div>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Acceso a SalamiOne</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="landing.css" />
+</head>
+<body>
+  <div class="auth">
+    <aside class="auth-side">
+      <div>
+        <a class="logo" href="/"><img src="logo.svg" alt="" width="34" height="34" /><span>Salami<b>One</b></span></a>
+        <h1>Evalúa CIS Controls v8.1 con evidencia, no con suposiciones.</h1>
+        <p class="auth-extra">Cada evaluación se guarda en tu cuenta con sus versiones, para comparar el antes y el después cuando lleguen nuevas evidencias.</p>
+      </div>
+      <p class="auth-extra mono" style="font-size:13px">IG1 · 56 &nbsp;·&nbsp; IG2 · 130 &nbsp;·&nbsp; IG3 · 153 salvaguardas</p>
+    </aside>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <div class="auth-tabs" role="tablist">
+          <button type="button" role="tab" id="t-login" aria-selected="true" class="on">Iniciar sesión</button>
+          <button type="button" role="tab" id="t-register" aria-selected="false">Crear cuenta</button>
+        </div>
+        <p class="auth-error" id="error" role="alert" hidden></p>
+
+        <form id="f-login">
+          <label>Correo<input id="l-email" type="email" autocomplete="email" required /></label>
+          <label>Contraseña<input id="l-pass" type="password" autocomplete="current-password" required /></label>
+          <button class="btn primary" type="submit">Entrar</button>
+        </form>
+
+        <form id="f-register" hidden>
+          <label>Nombre<input id="r-name" autocomplete="name" required maxlength="80" /></label>
+          <label>Correo<input id="r-email" type="email" autocomplete="email" required /></label>
+          <label>Contraseña<input id="r-pass" type="password" autocomplete="new-password" required minlength="8" /></label>
+          <p class="auth-note">Mínimo 8 caracteres. La contraseña se guarda con hash scrypt.</p>
+          <button class="btn primary" type="submit">Crear cuenta</button>
+        </form>
+        <p class="auth-note"><a href="/">Volver al inicio</a></p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const tab = (reg) => {
+      $('#f-login').hidden = reg;
+      $('#f-register').hidden = !reg;
+      $('#t-login').classList.toggle('on', !reg);
+      $('#t-register').classList.toggle('on', reg);
+      $('#t-login').setAttribute('aria-selected', !reg);
+      $('#t-register').setAttribute('aria-selected', reg);
+      $('#error').hidden = true;
+      history.replaceState(null, '', reg ? '/registro' : '/login');
+      (reg ? $('#r-name') : $('#l-email')).focus();
+    };
+    $('#t-login').onclick = () => tab(false);
+    $('#t-register').onclick = () => tab(true);
+    if (location.pathname === '/registro') tab(true);
+
+    fetch('/api/auth/me').then((r) => r.json()).then(({ user }) => user && (location.href = '/app')).catch(() => {});
+
+    async function send(url, body, btn) {
+      btn.disabled = true;
+      $('#error').hidden = true;
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+        location.href = '/app';
+      } catch (e) {
+        $('#error').textContent = e.message;
+        $('#error').hidden = false;
+        btn.disabled = false;
+      }
+    }
+    $('#f-login').addEventListener('submit', (e) => {
+      e.preventDefault();
+      send('/api/auth/login', { email: $('#l-email').value, password: $('#l-pass').value }, e.submitter);
+    });
+    $('#f-register').addEventListener('submit', (e) => {
+      e.preventDefault();
+      send('/api/auth/register', { name: $('#r-name').value, email: $('#r-email').value, password: $('#r-pass').value }, e.submitter);
+    });
+  </script>
+</body>
+</html>

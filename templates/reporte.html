@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
-  Plantilla FIJA del PDF ejecutivo. Replica el dashboard de Cyber Cactus.
+  Plantilla FIJA del dashboard en PDF (1 resumen e indicadores, 2 contexto y controles, 3 riesgos y roadmap, 4 cambios por nueva evidencia). Replica el dashboard de SalamiOne.
   Los marcadores entre llaves dobles los completa src/report.js con los datos del dashboard calculado:
-  no hay texto redactado por el modelo (salvo citas textuales verificadas).
+  no hay texto redactado por el modelo salvo citas textuales verificadas y afirmaciones de la ficha de contexto con cita.
+  La matriz completa de salvaguardas se descarga aparte en Excel.
 -->
 <html lang="es">
 <head>
@@ -11,14 +12,14 @@
   <style>{{css}}</style>
 </head>
 <body>
-  <!-- ============ PÁGINA 1: portada + resumen ============ -->
+  <!-- ============ PÁGINA 1: resumen, dashboard y metodología ============ -->
   <section class="page">
     <header class="band">
       <div class="band-logo">{{logo}}</div>
       <div>
-        <div class="band-title">Informe ejecutivo de ciberseguridad</div>
-        <div class="band-sub"><span class="b-cyber">Cyber</span> Cactus · {{marco}}</div>
-        <div class="band-date">Emitido el {{fechaEmision}}</div>
+        <div class="band-title">Reporte ejecutivo de ciberseguridad</div>
+        <div class="band-sub"><span class="b-one">Salami</span>One · {{marco}}</div>
+        <div class="band-date">Emitido el {{fechaEmision}} · {{estadoVersion}}</div>
       </div>
     </header>
 
@@ -29,53 +30,35 @@
         <p class="muted small">{{sector}}</p>
         <ul class="summary">{{resumen}}</ul>
       </div>
-      <div class="hero-score">
-        <p class="eyebrow">Índice de cumplimiento</p>
-        <div class="hero-number"><span class="num">{{indice}}</span><span class="of">/100</span></div>
-        <span class="chip {{indiceClase}}">{{indiceEtiqueta}}</span>
-        <div class="meter">
-          <div class="meter-track"></div>
-          <div class="meter-fill" style="width: {{indicePct}}%; background: var(--s-{{indiceClase}})"></div>
-          <div class="meter-ghost" style="left: calc({{indiceBasePct}}% - 1px)"></div>
-        </div>
-        <p class="small">{{indiceDelta}}</p>
-      </div>
     </div>
 
+    <h2 class="section">Dashboard ejecutivo</h2>
+    <div class="inds">{{indicadores}}</div>
     <div class="kpis">{{kpis}}</div>
-
-    <div class="card meta">
-      <div><span class="eyebrow">Fuente de verdad</span><p>{{documentos}}</p></div>
-      <div><span class="eyebrow">Análisis</span><p>{{fechaAnalisis}} · motor: {{motor}}</p></div>
-      <div><span class="eyebrow">Alcance</span><p>{{alcance}}</p></div>
-    </div>
+    <p class="muted small">Fuente de verdad: {{documentos}} · Evaluación: {{fechaAnalisis}} · Motor: {{motor}}</p>
+    <h2 class="section">Alcance, metodología y limitaciones</h2>
+    <div class="method small">{{metodologia}}</div>
   </section>
 
-  <!-- ============ PÁGINA 2: controles del catálogo ============ -->
+  <!-- ============ PÁGINA 2: contexto y controles ============ -->
   <section class="page">
-    <h2 class="section">Cumplimiento por control</h2>
-    <p class="muted small lead">Puntaje de cada control (promedio de sus salvaguardas), peso en el índice y estado de cada salvaguarda. La marca vertical indica el puntaje según la documentación.</p>
+    <h2 class="section">Contexto de la organización</h2>
+    {{contexto}}
+    <h2 class="section">Implementación por control CIS</h2>
     <div class="legend">{{leyenda}}</div>
     <div class="ctrl-grid">{{controles}}</div>
   </section>
 
-  <!-- ============ PÁGINA 3: prioridades ============ -->
+  <!-- ============ PÁGINA 3: riesgos y roadmap ============ -->
   <section class="page">
-    <h2 class="section">Prioridades de implementación</h2>
-    <p class="muted small lead">Salvaguardas pendientes con mayor mejora del índice si se implementan por completo.</p>
-    <table class="table">
-      <thead><tr><th>ID</th><th>Salvaguarda</th><th>Control</th><th>Estado</th><th class="num">Mejora</th></tr></thead>
-      <tbody>{{prioridades}}</tbody>
-    </table>
+    <h2 class="section">Cinco riesgos principales</h2>
+    {{riesgos}}
+    <h2 class="section">Roadmap de cinco iniciativas</h2>
+    {{roadmap}}
   </section>
 
-  <!-- ============ PÁGINAS 4+: detalle con evidencia ============ -->
-  <section class="page flow">
-    <h2 class="section">Detalle de salvaguardas y evidencia</h2>
-    {{detalle}}
+  <!-- ============ PÁGINA 4: actualización con nueva evidencia (si existe) ============ -->
+  {{actualizacion}}
 
-    <h2 class="section">Alcance y metodología</h2>
-    <div class="method">{{metodologia}}</div>
-  </section>
 </body>
 </html>

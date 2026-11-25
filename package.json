@@ -1,19 +1,22 @@
 {
-  "name": "agente-riesgo-chatgpt",
-  "version": "1.0.0",
-  "description": "Agente ChatGPT que analiza la documentación de una empresa y genera un dashboard de riesgo que se recalcula al aplicar controles.",
+  "name": "salamione",
+  "version": "2.0.0",
+  "description": "SalamiOne: asesor de CIS Controls v8.1 (IG1, IG2, IG3) con IA propia, dashboard con citas verificadas, exportación PDF/Excel y comparación antes y después.",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "samples": "node scripts/samples-pdf.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.5"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "mammoth": "^1.8.0",
     "multer": "^1.4.5-lts.1",

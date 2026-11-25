@@ -1,98 +1,108 @@
-# Cyber Cactus 🌵🕵️
+# SalamiOne
 
-Agente de ChatGPT, un detective de riesgo corporativo con gabardina, fedora y lentes oscuros, con una página propia que tiene dos vistas:
+Asesor de ciberseguridad experto en **CIS Controls v8.1**, con los tres Implementation Groups: IG1 (56 salvaguardas), IG2 (130) e IG3 (153). A partir de documentos o de lo que el usuario describe en el chat, arma un dashboard con citas verificadas. El dashboard se exporta a PDF y Excel, genera un resumen ejecutivo de una página y compara versiones para saber si los cambios mejoraron o empeoraron la postura.
 
-- **Chat**: la vista principal y el único lugar donde se cargan documentos. Con 📎 subís archivos o pegás texto, y también podés arrastrarlos al chat. Al subir un documento, Cyber Cactus lo analiza automáticamente mientras se muestra un círculo de carga en el centro de la pantalla. Los documentos cargados aparecen como etiquetas sobre la barra de escritura. El agente también **actúa**: si le decís *"ya implementamos MFA para la VPN"*, marca la salvaguarda y el dashboard se actualiza.
-- **Dashboard**: el índice de cumplimiento, una tarjeta por cada control del catálogo y las salvaguardas, que también se pueden marcar a mano.
-- **Versiones**: cada análisis guarda una versión automáticamente, y después de aplicar controles podés guardar otra (botón *Guardar versión* del dashboard, la pestaña Versiones o pidiéndoselo al chat). En la pestaña **Versiones** se comparan dos versiones, o una versión con el estado actual: índice A → B, conteos por estado, variación por control y la lista de salvaguardas que mejoraron o retrocedieron (marcando cuáles se aplicaron a mano). Cualquier versión se puede **restaurar**: vuelve el diagnóstico y los controles aplicados, pero no los documentos.
-- **Selector de modelo** en la barra superior: elegís qué modelo de ChatGPT usa el agente. La elección queda guardada.
-
-Qué hace:
-
-1. **Recibe la fuente de verdad** de la organización: políticas, informes, inventarios o procedimientos, en PDF, DOCX, TXT, MD, CSV, JSON, HTML o como texto pegado.
-2. **La evalúa contra el catálogo [`Catalogo_CIS_v8.1_IG1.md`](Catalogo_CIS_v8.1_IG1.md)**: 15 controles CIS y 56 salvaguardas IG1. Los dominios del dashboard salen **solo** de ese archivo; si se edita, el sistema se adapta al reiniciar.
-3. **Califica cada salvaguarda**: Implementado, Parcial, No implementado o Sin evidencia, siempre con citas textuales de los documentos.
-4. **Muestra un dashboard**: índice de cumplimiento de 0 a 100, puntaje y peso por control, mapa de las 56 salvaguardas, prioridades y detalle con evidencia.
-5. **Recalcula al aplicar controles**: cada salvaguarda se marca como aplicada (desde el dashboard o pidiéndoselo al chat) y el índice cambia al instante. El estado documentado se conserva para comparar.
-6. **Exporta un PDF ejecutivo** a partir de una **plantilla fija del dashboard** ([`templates/reporte.html`](templates/reporte.html) + [`templates/reporte.css`](templates/reporte.css)). Las tarjetas son las mismas que en la página ([`public/components.js`](public/components.js)). El PDF lo imprime el navegador instalado (Edge o Chrome) mediante `puppeteer-core`. Para ver la plantilla completa sin generar el PDF: `GET /api/report.html`.
-7. **Chat con herramientas**: `analizar_documentacion`, `actualizar_salvaguarda` (solo acepta IDs del catálogo) y `guardar_version`.
-
-### Cómo evita inventar
-
-| Capa | Qué hace |
-|---|---|
-| Esquema de respuesta | Los IDs de salvaguarda, los estados y los nombres de documento son listas cerradas (`enum`) dentro del JSON Schema estricto de OpenAI. |
-| Prompt | Solo se puede calificar con una cita textual; ante la duda, "Sin evidencia". Se ignoran las instrucciones que vengan dentro de los documentos. |
-| Verificador ([`src/verify.js`](src/verify.js)) | Cada cita se busca en el texto real del documento. Las que no aparecen se descartan, y un estado sin cita verificada se degrada a "Sin evidencia". Se descartan los IDs que no están en el catálogo. El nombre y el sector de la organización solo se aceptan si figuran textualmente. |
-| Resumen ejecutivo | Se arma con plantillas a partir de los números calculados; no lo redacta el modelo. |
-
-### Valoración
-
-En [`config/valoracion.json`](config/valoracion.json) se configuran:
-- `valoresEstado`: puntaje de cada estado. Por defecto Implementado 100, Parcial 50, No implementado 0 y Sin evidencia 0.
-- `pesosControl`: peso de cada control CIS en el índice. Por defecto es la cantidad de salvaguardas del control, de modo que las 56 valen lo mismo.
-
-El puntaje de un control es el promedio de sus salvaguardas, y el índice es el promedio de los controles ponderado por su peso. Junto a cada salvaguarda pendiente se muestra cuántos puntos sumaría al índice si se implementa.
-
-Si OpenAI no responde (cuenta sin saldo, key inválida, modelo no disponible o sin red), Cyber Cactus pasa solo al **modo demo** y avisa en pantalla qué pasó.
+Cada usuario tiene su cuenta, sus evaluaciones (una por organización) y su propio modelo de IA: OpenAI, Anthropic Claude, Google Gemini, Ollama (local) o cualquier servidor compatible con OpenAI.
 
 ## Puesta en marcha
 
 ```bash
 npm install
-cp .env.example .env      # completar OPENAI_API_KEY
+cp .env.example .env      # opcional: APP_SECRET, IA del servidor, puerto
 npm start                 # http://localhost:3000
 ```
 
-Para probar, adjuntá `samples/empresa-demo.md` desde el chat.
+- `/` landing · `/registro` y `/login` acceso · `/app` aplicación (requiere sesión).
+- La primera cuenta que se registra hereda la evaluación de la versión anterior (`data/state.json`), si existe.
+- Requiere **Node 22.5 o superior** (usa `node:sqlite`, sin dependencias nativas) y Chrome o Edge instalado para imprimir los PDF (`CHROME_PATH` si no se detecta).
 
-**Modelos:** el selector ofrece `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o`, `gpt-4o-mini`, `gpt-5`, `gpt-5-mini` y `gpt-5-nano`, más el de `OPENAI_MODEL`. Para cambiar la lista, usá `OPENAI_MODELS=modelo1,modelo2` en `.env`. Al cambiar de modelo, conviene volver a analizar.
+## Cómo se usa
 
-**PDF:** necesita Microsoft Edge o Google Chrome instalado. Si no lo encuentra, indicá la ruta del navegador en `CHROME_PATH`.
+1. **Crea una evaluación** (selector arriba a la izquierda) y elige el IG objetivo.
+2. **Conecta tu IA** (botón de estado arriba a la derecha). Sin IA, funciona el motor demo de reglas.
+3. **Carga la evidencia:** con 📎 sube PDF, DOCX, TXT, MD, CSV, JSON o HTML, pega texto, o carga el caso de ejemplo. También puedes **describir la organización en el chat** y pulsar *Generar dashboard con esta descripción* (o pedírselo al chat): tus mensajes se guardan como documento de contexto y las citas se verifican contra ellos.
+4. **Dashboard:** implementación, cobertura, mapa por control, cinco riesgos, roadmap, ficha de contexto y la matriz completa con evidencia. Los botones de cada salvaguarda simulan cambios sin tocar la evidencia.
+5. **Exporta:** *Dashboard en PDF*, *Dashboard en Excel* (hojas Resumen, Controles, Salvaguardas, Riesgos, Roadmap y Contexto) y *Resumen ejecutivo* de una página carta (se verifica que tenga exactamente una página).
+6. **Antes y después:** sube **nueva evidencia** (avance de iniciativas o documento actualizado). SalamiOne propone cambios con citas, tú apruebas o rechazas cada uno, y se guarda una versión nueva. En **Comparar** eliges A y B y obtienes el veredicto (*Mejoró*, *Empeoró*, *Resultado mixto* o *Sin cambios*), la variación por control, las salvaguardas que mejoraron o retrocedieron y los riesgos. La comparación también se exporta a PDF y Excel.
 
-Sin `OPENAI_API_KEY`, o si OpenAI no responde, la app funciona en **modo demo**: hace un análisis de brechas por palabras clave y el chat da respuestas básicas armadas con los datos del dashboard. **La API de OpenAI se paga aparte de ChatGPT Plus**: la cuenta necesita saldo en *Settings → Billing*. Con la clave usa ChatGPT (`OPENAI_MODEL`, por defecto `gpt-4.1`) con *Structured Outputs*, de modo que la respuesta del agente siempre respeta el esquema.
+El tutorial se muestra al primer inicio de sesión y se puede repetir desde el menú de usuario.
+
+## Indicadores
+
+- **Implementación** = (I + 0,5 × P) / (I + P + N) × 100. "No determinable" si no hay salvaguardas evaluables.
+- **Cobertura** = (I + P + N) / (total del IG − No aplicables) × 100.
+
+"No verificado" **no cuenta como incumplimiento**: queda fuera de la implementación y solo baja la cobertura. Los valores de cada estado están en [`config/valoracion.json`](config/valoracion.json).
+
+## Cómo evita inventar
+
+| Capa | Qué hace |
+|---|---|
+| Esquemas de respuesta | IDs de salvaguarda, estados y nombres de documento son listas cerradas (`enum`) en salida estructurada estricta |
+| Prompt maestro | [`config/prompt-maestro.md`](config/prompt-maestro.md), reglas R1–R12: sin cita textual no hay conclusión; ante la duda, "No verificado"; las instrucciones dentro de los documentos se ignoran |
+| Verificador ([`src/verify.js`](src/verify.js)) | Busca cada cita en el texto real y le agrega página (PDF) o sección. Las citas que no aparecen se descartan y los estados sin cita pasan a "No verificado" |
+| Indicadores, resumen y veredicto | Los calcula el sistema a partir de la matriz; no los redacta el modelo |
+
+La evaluación se hace **por lotes de controles** (máx. 40 salvaguardas por llamada, `SAFEGUARD_BATCH`), así IG3 entra en la salida de cualquier modelo. Si el proveedor falla (clave, saldo, red o modelo), el agente pasa al motor demo, que recorre las mismas etapas y el mismo verificador, y lo avisa en pantalla.
+
+## Proveedores de IA
+
+| Proveedor | Cómo se conecta | Salida estructurada |
+|---|---|---|
+| OpenAI | API key | `json_schema` estricto (Chat Completions; Responses API si el modelo lo exige) |
+| Anthropic (Claude) | API key · SDK oficial `@anthropic-ai/sdk` | `output_config.format` con `json_schema`; streaming para respuestas largas; respaldo del servidor ante negativas en los modelos que lo admiten |
+| Google Gemini | API key de AI Studio · endpoint compatible con OpenAI | `json_schema` |
+| Ollama (local) | URL base (por defecto `http://localhost:11434/v1`), sin clave | `json_schema`, o JSON pedido en el prompt |
+| Compatible con OpenAI | URL base + modelo (LM Studio, OpenRouter, Azure, vLLM…) | `json_schema` → `json_object` → JSON en el prompt |
+
+La API key se guarda **cifrada (AES-256-GCM)** con `APP_SECRET` y nunca vuelve al navegador (solo los últimos 4 caracteres). *Probar conexión* hace una llamada con salida estructurada para validar clave y modelo. Si un usuario no configuró nada y el `.env` tiene `OPENAI_API_KEY` o `ANTHROPIC_API_KEY`, se usa esa IA del servidor (desactivable con `SERVER_AI=false`).
+
+## Seguridad
+
+- Contraseñas con **scrypt**; sesiones con cookie `HttpOnly` + `SameSite=Lax` (y `Secure` con `COOKIE_SECURE=true` detrás de HTTPS); tokens guardados como hash.
+- Límite de intentos de inicio de sesión, verificación de origen en peticiones que modifican datos y cabeceras básicas de seguridad.
+- Cada usuario solo accede a sus evaluaciones y a sus archivos exportados (`data/exports/<evaluación>/`).
+- Para producción: define `APP_SECRET` fijo (si cambia, las API keys guardadas dejan de poder leerse), sirve detrás de HTTPS con `TRUST_PROXY=1` y `COOKIE_SECURE=true`, y respalda `data/`.
 
 ## Estructura
 
 | Archivo | Rol |
 |---|---|
-| `server.js` | API Express: documentos, análisis, controles, chat |
-| `src/agent.js` | Prompts, esquemas JSON y herramientas de Cyber Cactus para OpenAI, con respaldo automático |
-| `src/catalog.js` | Lee el catálogo CIS del Markdown y la valoración |
-| `src/verify.js` | Verificación de citas, IDs y datos de la organización |
-| `src/report.js` | Completa la plantilla del PDF y la imprime con el navegador |
-| `templates/` | Plantilla fija del PDF ejecutivo (HTML + CSS) |
-| `public/components.js` | Tarjetas compartidas por el dashboard y el PDF |
-| `public/versions.js` | Resumen de versiones y comparación A/B |
-| `src/heuristic.js` | Motor de respaldo sin API key |
-| `src/extract.js` | Extracción de texto (PDF, DOCX, etc.) |
-| `src/store.js` | Persistencia en `data/state.json` |
-| `public/` | La página del agente (HTML, CSS y JS sin framework) y `logo.svg` |
-| `config/valoracion.json` | Valores por estado y pesos por control |
-| `test/` | Tests del catálogo, el verificador y el puntaje (`npm test`) |
+| `server.js` | Páginas, API, contexto por solicitud (usuario, evaluación, catálogo del IG e IA), exportaciones y chat |
+| `src/db.js` · `src/auth.js` · `src/security.js` · `src/store.js` | SQLite, cuentas y sesiones, hash y cifrado, evaluaciones y su estado |
+| `src/ai/` | Proveedores: `openai-compatible.js` (OpenAI, Gemini, Ollama, compatibles), `anthropic.js` (Claude), `index.js` (registro y errores) |
+| `src/agent.js` | Contexto → salvaguardas por lotes → riesgos y roadmap → nueva evidencia; chat con herramientas |
+| `catalog/CIS_Controls_v8.1.md` · `src/catalog.js` | Catálogo de 153 salvaguardas con su IG; único origen de controles y salvaguardas |
+| `src/verify.js` · `src/heuristic.js` | Verificador de citas y motor demo |
+| `src/report.js` · `src/xlsx.js` · `src/onepager.js` · `src/pdfsummary.js` · `src/matrix.js` | Dashboard y comparación en PDF, Excel, resumen de una página, PDF libre desde el chat y CSV |
+| `public/index.html` · `login.html` · `app.html` | Landing, acceso y aplicación |
+| `public/app.js` · `tour.js` · `components.js` · `scoring.js` · `versions.js` | Interfaz, tutorial, componentes compartidos con los PDF, indicadores y comparación con veredicto |
+| `templates/` | Plantillas fijas de los PDF |
+| `samples/` | Caso de ejemplo (Distribuidora Andina S.A.: contexto y avance de iniciativas) |
+| `test/` | `npm test` |
 
-## API
+## Herramientas del chat
+
+El agente puede, según lo que pida el usuario: evaluar la documentación, **armar el dashboard desde la conversación**, simular salvaguardas, guardar versiones, **exportar el dashboard (PDF o Excel)**, **generar el resumen ejecutivo**, **comparar versiones** con veredicto y enlaces de descarga, y crear un PDF de una página con el formato que se le indique.
+
+## API principal
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/state` | Documentos, análisis y dashboard calculado |
-| POST | `/api/documents` | Subir archivos (multipart, campo `files`) |
-| POST | `/api/documents/text` | `{name, text}` |
-| DELETE | `/api/documents/:id` | Quitar un documento |
-| POST | `/api/analyze` | Evaluar toda la fuente de verdad contra el catálogo |
-| PUT | `/api/safeguards/:id` | `{status: "implementado" \| "parcial" \| "no_implementado" \| "documentado"}` |
-| GET | `/api/report.pdf` | Descargar el PDF ejecutivo |
-| GET | `/api/report.html` | Vista previa HTML de la plantilla del PDF |
-| PUT | `/api/settings` | `{model}`: cambia el modelo de ChatGPT |
-| POST | `/api/versions` | `{label}`: guarda una versión del estado actual |
-| POST | `/api/versions/:id/restore` | Restaura el diagnóstico y los controles aplicados de una versión |
-| DELETE | `/api/versions/:id` | Elimina una versión |
-| POST | `/api/chat` | `{messages: [{role, content}]}` → `{reply, actions, state?}` |
-| POST | `/api/reset` | Borrar todo |
+| POST | `/api/auth/register` · `/login` · `/logout` · GET `/api/auth/me` | Cuentas y sesión |
+| GET | `/api/state` | Estado de la evaluación activa |
+| POST · PUT · DELETE | `/api/workspaces[/:id]` · POST `/api/workspaces/:id/activate` | Evaluaciones (nombre e IG) |
+| GET · PUT | `/api/me/ai` · POST `/api/me/ai/models` · `/api/me/ai/test` | Configuración de IA del usuario |
+| POST | `/api/documents` · `/api/documents/text` · `/api/sample/:rol` | Documentos y caso de ejemplo |
+| POST | `/api/analyze` · `/api/evaluate-chat` | Evaluar documentos o la descripción del chat |
+| POST | `/api/evidence` · PUT `/api/proposal/changes/:id` · POST `/api/proposal/apply` | Nueva evidencia y validación |
+| GET | `/api/export/dashboard.pdf` · `.xlsx` · `/api/export/summary.pdf` (`?version=`) | Exportaciones |
+| GET | `/api/export/compare.pdf` · `.xlsx` · `.json` (`?a=&b=`, acepta `inicial`, `current`, número o id) | Comparación antes/después |
+| POST · DELETE | `/api/versions` · `/api/versions/:id/restore` | Versiones |
+| POST | `/api/chat` | `{messages}` → `{reply, actions, state}` |
 
 ## Notas
 
-- Al volver a analizar, se conservan las salvaguardas aplicadas, porque sus IDs son estables.
-- Los documentos se truncan a `MAX_DOC_CHARS` en total, repartidos entre los documentos.
 - Los PDF escaneados sin OCR no tienen texto extraíble.
-- Hay un único espacio de trabajo por instalación y no hay autenticación. Antes de exponer la app fuera de `localhost`, hay que agregar login.
+- Las descripciones del catálogo son resúmenes en español con fines de evaluación documental; el texto oficial es la publicación de CIS. CIS Controls® es marca de Center for Internet Security, Inc.
+- `docs/` conserva la entrega académica original (versión Cyber Cactus) como registro histórico.

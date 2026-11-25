@@ -13,7 +13,19 @@ export async function extractText(buffer, originalName) {
   }
   let text;
   if (ext === '.pdf') {
-    text = (await pdfParse(buffer)).text;
+    // Marcamos cada página para poder citar "p. N" en la evidencia (página o sección del PDF).
+    let n = 0;
+    const pagerender = (page) =>
+      page.getTextContent({ normalizeWhitespace: false, disableCombineTextItems: false }).then((tc) => {
+        let lastY;
+        let out = '';
+        for (const item of tc.items) {
+          out += lastY === item.transform[5] || lastY === undefined ? item.str : '\n' + item.str;
+          lastY = item.transform[5];
+        }
+        return `[[Página ${++n}]]\n${out}`;
+      });
+    text = (await pdfParse(buffer, { pagerender })).text;
   } else if (ext === '.docx') {
     text = (await mammoth.extractRawText({ buffer })).value;
   } else if (ext === '.html' || ext === '.htm') {
@@ -25,6 +37,6 @@ export async function extractText(buffer, originalName) {
     text = buffer.toString('utf8');
   }
   text = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-  if (!text) throw new Error('No se pudo extraer texto (¿PDF escaneado sin OCR?).');
+  if (!text.replace(/\[\[Página \d+\]\]/g, '').trim()) throw new Error('No se pudo extraer texto (¿PDF escaneado sin OCR?).');
   return text;
 }
