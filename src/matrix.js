@@ -1,5 +1,5 @@
 // Matriz de salvaguardas como CSV (separador ";" y BOM UTF-8 para Excel en español).
-import { STATUS, APPLICABILITY, pct } from '../public/scoring.js';
+import { STATUS, APPLICABILITY, pct } from '../shared/scoring.js';
 
 const cell = (v) => {
   const s = String(v ?? '').replace(/\r?\n/g, ' ').trim();

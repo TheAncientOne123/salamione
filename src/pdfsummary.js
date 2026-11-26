@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { renderOnePager } from './onepager.js';
-import { esc } from '../public/components.js';
+import { esc } from './components.js';
 
 const read = (p) => fs.readFileSync(path.resolve(p), 'utf8');
 
@@ -81,7 +81,7 @@ export function buildSummaryHtml(doc) {
   const data = {
     titulo: esc(doc.titulo || 'Resumen'),
     css: read('templates/resumen-1p.css'),
-    logo: read('public/logo.svg'),
+    logo: read('web/public/logo.svg'),
     subtitulo: doc.subtitulo ? `<div class="sub">${esc(doc.subtitulo)}</div>` : '',
     datos: datos.length ? `<div class="datos">${datos.map((d) => `<span><b>${esc(d.etiqueta)}:</b> ${esc(d.valor)}</span>`).join('')}</div>` : '',
     secciones,

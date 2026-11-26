@@ -133,7 +133,7 @@ h1, h2, p { margin: 0; }
 .applied { color: var(--accent); font-size: 9px; margin-top: 2px; }
 .method p { color: var(--ink-2); margin-top: 6px; }
 
-/* ---- Consigna CIS: indicadores, contexto, riesgos, roadmap, cambios ---- */
+/* ---- Componentes CIS: indicadores, contexto, riesgos, roadmap, cambios ---- */
 .chip.na { background: transparent; color: var(--ink-2); border: 1px solid var(--axis); }
 .chip.na::before { content: '∅'; }
 .sq.no_aplicable { background: transparent; border: 1px solid var(--muted); }

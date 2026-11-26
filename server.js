@@ -17,9 +17,9 @@ import { dashboardXlsx, comparisonXlsx } from './src/xlsx.js';
 import { reportFileName, buildOnePagerHtml, renderOnePager } from './src/onepager.js';
 import { createSummaryPdf } from './src/pdfsummary.js';
 import { analyzeContext, analyzeSafeguards, analyzeRoadmap, proposeUpdate, chat, AGENT_NAME } from './src/agent.js';
-import { PROVIDERS, createAI, listModels, describeError, resolveConfig } from './src/ai/index.js';
-import { computeDashboard, APPLICABLE, STATUS, pct } from './public/scoring.js';
-import { versionSummary, compareVersions } from './public/versions.js';
+import { PROVIDERS, createAI, listModels, describeError, resolveConfig, testConnection, pickModel, recommendModel } from './src/ai/index.js';
+import { computeDashboard, APPLICABLE, STATUS, pct } from './shared/scoring.js';
+import { versionSummary, compareVersions } from './shared/versions.js';
 
 openDb();
 
@@ -43,14 +43,35 @@ const wrap = (fn) => (req, res, next) =>
   });
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
-// ---------------- Páginas ----------------
+// ---------------- Páginas (React) ----------------
+// Desarrollo (`npm run dev`, o si no existe dist/): Vite en modo middleware, con recarga en caliente en el mismo puerto.
+// Producción (`npm run build` + `npm start`): archivos compilados de dist/.
 
-const page = (file) => (req, res) => res.sendFile(path.resolve('public', file));
+const DIST = path.resolve('dist');
+const DEV = process.argv.includes('--dev') || !fs.existsSync(path.join(DIST, 'index.html'));
+let vite = null;
+if (DEV) {
+  const { createServer } = await import('vite');
+  vite = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+  app.use(vite.middlewares);
+} else {
+  app.use(express.static(DIST, { index: false }));
+}
+
+const page = (file) => async (req, res, next) => {
+  try {
+    if (!vite) return res.sendFile(path.join(DIST, file));
+    const html = fs.readFileSync(path.resolve('web', file), 'utf8');
+    res.status(200).type('html').send(await vite.transformIndexHtml(req.originalUrl, html));
+  } catch (e) {
+    vite?.ssrFixStacktrace(e);
+    next(e);
+  }
+};
 app.get('/', page('index.html'));
 app.get(['/login', '/registro'], page('login.html'));
 app.get('/app', requireAuth, page('app.html'));
-app.get('/app.html', (req, res) => res.redirect('/app'));
-app.use(express.static('public', { index: false }));
+app.get(['/app.html', '/index.html', '/login.html'], (req, res) => res.redirect(req.path === '/app.html' ? '/app' : req.path === '/login.html' ? '/login' : '/'));
 
 // ---------------- Autenticación ----------------
 
@@ -368,7 +389,11 @@ function mergeAi(user, body) {
   if (provider === 'none') return { provider: 'none' };
   if (!PROVIDERS[provider]) throw fail(400, 'Elige un proveedor válido.');
   const apiKey = body.apiKey ? String(body.apiKey).trim() : prev.provider === provider ? decrypt(prev.apiKey) : null;
-  return { provider, model: String(body.model || '').trim(), baseURL: String(body.baseURL || '').trim(), apiKey };
+  let baseURL = String(body.baseURL || '').trim().replace(/\/+$/, '');
+  if (baseURL && !/^https?:\/\//i.test(baseURL)) throw fail(400, 'La URL base debe empezar con http:// o https://');
+  // Ollama expone la API compatible en /v1: si el usuario pegó solo el host, se completa.
+  if (provider === 'ollama' && baseURL && !/\/v1$/.test(baseURL)) baseURL += '/v1';
+  return { provider, model: String(body.model || '').trim(), baseURL, apiKey };
 }
 
 app.put('/api/me/ai', wrap(async (req, res) => {
@@ -380,6 +405,14 @@ app.put('/api/me/ai', wrap(async (req, res) => {
     if (cfg.provider !== 'none' && PROVIDERS[cfg.provider].needsKey && !cfg.apiKey) throw fail(400, `${PROVIDERS[cfg.provider].label} necesita una API key.`);
     if ((cfg.provider === 'compatible') && !cfg.baseURL) throw fail(400, 'Indica la URL base del servidor compatible (termina en /v1).');
     if (cfg.provider === 'compatible' && !cfg.model) throw fail(400, 'Indica el nombre del modelo.');
+    // Sin modelo elegido: se toma uno disponible en la cuenta (Gemini y Ollama cambian de modelos seguido).
+    if (cfg.provider !== 'none' && !cfg.model) {
+      try {
+        cfg.model = await pickModel(cfg);
+      } catch (e) {
+        throw fail(400, `No pude elegir un modelo automáticamente: ${describeError(e, { provider: cfg.provider, model: '' }).message} Escribe el modelo a mano.`);
+      }
+    }
     setUserField(req.user.id, 'ai_config', JSON.stringify({ ...cfg, apiKey: encrypt(cfg.apiKey) }));
   }
   aiErrors.delete(req.user.id);
@@ -390,28 +423,23 @@ app.put('/api/me/ai', wrap(async (req, res) => {
 app.post('/api/me/ai/models', wrap(async (req, res) => {
   const cfg = mergeAi(req.user, req.body || {});
   try {
-    res.json({ models: await listModels(cfg) });
+    const models = await listModels(cfg);
+    res.json({ models, recommended: recommendModel(cfg.provider, models) });
   } catch (e) {
-    throw fail(400, describeError(e, { provider: cfg.provider, model: cfg.model }).message);
+    const msg = describeError(e, { provider: cfg.provider, model: cfg.model }).message;
+    throw fail(400, cfg.provider === 'compatible' && e?.status === 404 ? `${msg} Este servidor no expone la lista de modelos: escribe el modelo a mano (y revisa que la URL termine en /v1).` : msg);
   }
 }));
 
 app.post('/api/me/ai/test', wrap(async (req, res) => {
   const cfg = mergeAi(req.user, req.body || {});
-  const ai = createAI(cfg);
-  if (!ai) throw fail(400, 'Faltan datos: proveedor, modelo o API key.');
-  const t0 = Date.now();
-  try {
-    const out = await ai.structured({
-      system: 'Eres un verificador de conexión.',
-      user: 'Responde con ok=true y el número de salvaguardas de CIS Controls v8.1 IG1.',
-      name: 'prueba',
-      schema: { type: 'object', additionalProperties: false, required: ['ok', 'salvaguardas_ig1'], properties: { ok: { type: 'boolean' }, salvaguardas_ig1: { type: 'integer' } } },
-    });
-    res.json({ ok: true, ms: Date.now() - t0, label: ai.label, answer: out });
-  } catch (e) {
-    throw fail(400, describeError(e, ai).message);
-  }
+  if (cfg.provider === 'none') throw fail(400, 'El motor demo no necesita prueba de conexión.');
+  if (PROVIDERS[cfg.provider].needsKey && !cfg.apiKey) throw fail(400, `Escribe la API key de ${PROVIDERS[cfg.provider].label}.`);
+  if (cfg.provider === 'compatible' && !cfg.baseURL) throw fail(400, 'Indica la URL base del servidor compatible (termina en /v1).');
+  if (cfg.provider === 'compatible' && !cfg.model) throw fail(400, 'Indica el nombre del modelo.');
+  // Tiempo límite total de 45 s: la prueba nunca queda "probando" indefinidamente.
+  const r = await testConnection(cfg, { timeoutMs: 45000 });
+  res.json(r);
 }));
 
 // ---------------- Rutas: documentos, caso de ejemplo y análisis ----------------
@@ -442,6 +470,24 @@ app.post('/api/documents/text', wrap(async (req, res) => {
   const doc = req.ctx.store.addDocument((name || 'Nota').trim().slice(0, 120), text.trim(), role === 'evidencia' ? 'evidencia' : 'contexto', 'texto');
   if (doc.role === 'evidencia') await processEvidence(req.ctx, [doc]);
   res.json(snapshot(req.ctx));
+}));
+
+// Fuentes: texto extraído de un documento (para revisarlo) y descarga como .txt.
+function findDoc(ctx, id) {
+  const d = ctx.store.get().documents.find((x) => x.id === id);
+  if (!d) throw fail(404, 'El documento no existe.');
+  return d;
+}
+app.get('/api/documents/:id', wrap(async (req, res) => {
+  const d = findDoc(req.ctx, req.params.id);
+  res.json({ ...d, role: d.role || 'contexto', pages: (d.text.match(/\[\[Página \d+\]\]/g) || []).length || null });
+}));
+app.get('/api/documents/:id/text', wrap(async (req, res) => {
+  const d = findDoc(req.ctx, req.params.id);
+  const name = `${d.name.replace(/\.[^.]+$/, '').replace(/[^\w.\- ]+/g, '_')}.txt`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  res.send(d.text.replace(/\[\[Página (\d+)\]\]/g, '\n--- Página $1 ---'));
 }));
 
 app.delete('/api/documents/:id', (req, res) => {

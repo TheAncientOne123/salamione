@@ -4,7 +4,7 @@
 //
 // Las palabras clave son una ayuda de búsqueda: los dominios y salvaguardas vienen del catálogo.
 
-import { pct, STATUS, SEVERITY } from '../public/scoring.js';
+import { pct, STATUS, SEVERITY } from '../shared/scoring.js';
 
 const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const NEGATION = /\b(no|sin|nunca|carece|carecemos|falta|faltan|pendiente|desactualizad[oa]s?|vencid[oa]s?|inexistente|ningun[oa]?|tampoco|deficiente|insuficiente|improvis\w*)\b/;

@@ -7,7 +7,7 @@
 // Sin IA (o si el proveedor falla por saldo, clave, red o modelo) se usa el motor demo de reglas.
 import fs from 'node:fs';
 import path from 'node:path';
-import { fmt, STATUS_IDS } from '../public/scoring.js';
+import { fmt, STATUS_IDS } from '../shared/scoring.js';
 import { CONTEXT_DIMENSIONS } from './verify.js';
 import { describeError } from './ai/index.js';
 

@@ -4,11 +4,14 @@
 import OpenAI from 'openai';
 import { parseJsonLoose, schemaInstruction } from './json.js';
 
+// Tiempo máximo por solicitud y reintentos: los define quien crea el cliente (la prueba de conexión usa valores cortos).
 export function openaiClient(cfg) {
-  return new OpenAI({ apiKey: cfg.apiKey || 'sin-clave', baseURL: cfg.baseURL || undefined, maxRetries: 1, timeout: 10 * 60 * 1000 });
+  return new OpenAI({ apiKey: cfg.apiKey || 'sin-clave', baseURL: cfg.baseURL || undefined, maxRetries: cfg.maxRetries ?? 1, timeout: cfg.timeoutMs ?? 5 * 60 * 1000 });
 }
 
-const unsupportedFormat = (e) => e?.status === 400 || e?.status === 422 || e?.status === 501;
+// Solo un error que habla del formato de salida justifica probar el siguiente formato; uno de clave o de modelo no.
+const unsupportedFormat = (e) =>
+  [400, 422, 501].includes(e?.status) && /response_format|json_schema|json_object|schema|structured|format|strict|additionalProperties/i.test(`${e?.message || ''} ${e?.error?.message || ''}`);
 // Algunos modelos de OpenAI no aceptan herramientas en Chat Completions y exigen la Responses API.
 const needsResponsesApi = (e) => e?.status === 400 && /(\/v1\/responses|reasoning_effort)/i.test(e?.error?.message || e?.message || '');
 
@@ -16,14 +19,15 @@ export function createOpenAICompatible(cfg) {
   const client = openaiClient(cfg);
   const model = cfg.model;
   // Modo de salida estructurada que funcionó la última vez para este modelo.
-  let mode = cfg.provider === 'openai' || cfg.provider === 'gemini' ? 'json_schema' : 'json_schema';
+  let mode = 'json_schema';
   let usesResponses = false;
 
-  async function complete(system, user, name, schema, format) {
+  async function complete(system, user, name, schema, format, maxTokens) {
     const sys = format === 'json_schema' ? system : `${system}\n\n${schemaInstruction(schema)}`;
     const body = { model, messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] };
     if (format === 'json_schema') body.response_format = { type: 'json_schema', json_schema: { name, strict: true, schema } };
     if (format === 'json_object') body.response_format = { type: 'json_object' };
+    if (maxTokens && cfg.provider !== 'openai') body.max_tokens = maxTokens;
     const res = await client.chat.completions.create(body);
     const msg = res.choices[0].message;
     if (msg.refusal) throw Object.assign(new Error(`El modelo se negó: ${msg.refusal}`), { status: 422 });
@@ -35,12 +39,12 @@ export function createOpenAICompatible(cfg) {
     provider: cfg.provider,
     model,
 
-    async structured({ system, user, name, schema }) {
+    async structured({ system, user, name, schema, maxTokens }) {
       const order = ['json_schema', 'json_object', 'prompt'];
       let lastErr;
       for (const f of order.slice(order.indexOf(mode))) {
         try {
-          const out = await complete(system, user, name, schema, f);
+          const out = await complete(system, user, name, schema, f, maxTokens);
           mode = f;
           return out;
         } catch (e) {
@@ -103,6 +107,7 @@ export async function listOpenAICompatibleModels(cfg) {
       .filter((id) => /^(gpt-[0-9]|o[0-9])/.test(id))
       .filter((id) => !/(audio|realtime|transcribe|tts|search|image|embedding|codex|healthcare|instruct|-\d{4}-\d{2}-\d{2}$)/.test(id));
   }
-  if (cfg.provider === 'gemini') ids = ids.filter((id) => /^gemini/.test(id) && !/(embedding|image|tts|audio|live)/.test(id));
-  return [...new Set(ids)].sort((a, b) => b.localeCompare(a, 'en', { numeric: true }));
+  // Gemini lista también modelos de robótica, imagen, audio, video y embeddings: no sirven para chat de texto con JSON.
+  if (cfg.provider === 'gemini') ids = ids.filter((id) => /^gemini/.test(id) && !/(embedding|image|imagen|tts|audio|live|robotics|veo|aqa|computer-use|learnlm|streaming|thinking-exp|native)/.test(id));
+  return [...new Set(ids)];
 }

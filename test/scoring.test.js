@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { computeDashboard, indicators } from '../public/scoring.js';
+import { computeDashboard, indicators } from '../shared/scoring.js';
 import { loadCatalog } from '../src/catalog.js';
 import { verifyAssessments, verifyContext, verifyRoadmap, verifyProposal, quoteInText, locateRef, newStats } from '../src/verify.js';
 import { heuristicAnalysis, heuristicContext, heuristicRoadmap, heuristicProposal, heuristicChat } from '../src/heuristic.js';
-import { versionSummary, compareVersions } from '../public/versions.js';
+import { versionSummary, compareVersions } from '../shared/versions.js';
 import { matrixCsv } from '../src/matrix.js';
 
 const catalog = loadCatalog();
@@ -51,7 +51,7 @@ test('IG2: el motor demo evalúa las 130 y el dashboard cuenta sobre 130', () =>
   assert.equal(d.ig, 2);
 });
 
-test('indicadores de la consigna: implementación y cobertura', () => {
+test('indicadores: implementación y cobertura', () => {
   const st = [...Array(10).fill('implementado'), ...Array(4).fill('parcial'), ...Array(6).fill('no_implementado'), ...Array(30).fill('no_verificado'), ...Array(6).fill('no_aplicable')];
   const r = indicators(st);
   assert.equal(r.implementation, 60); // (10 + 2) / 20
@@ -234,4 +234,21 @@ test('PDF de una página desde el chat: contenido del agente → carta, 1 págin
   assert.equal(pages, 1);
   assert.match(pdf.toString('latin1'), /\/MediaBox \[0 0 612 792\]/); // carta
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('conexiones de IA: tiempo agotado, Gemini sin detalle y errores de formato', async () => {
+  const { describeError } = await import('../src/ai/index.js');
+  assert.match(describeError({ code: 'TIMEOUT', message: 'timeout' }, { provider: 'ollama', model: 'llama3.1' }).message, /cargándose/);
+  assert.match(describeError({ name: 'APIConnectionTimeoutError', message: 'Request timed out.' }, { provider: 'openai', model: 'x' }).message, /no respondió a tiempo/);
+  assert.match(describeError({ status: 400, message: '400 status code (no body)' }, { provider: 'gemini', model: 'g' }).message, /Gemini rechazó/);
+  assert.match(describeError({ status: 400, message: '400 status code (no body)' }, { provider: 'compatible', model: 'm' }).message, /sin dar detalles/);
+});
+
+test('modelos: recomendado de Gemini y sin adivinar en servidores genéricos', async () => {
+  const { rankModels, recommendModel } = await import('../src/ai/index.js');
+  const g = ['gemini-robotics-er-2-streaming-preview', 'gemini-3-pro-preview', 'gemini-2.5-pro', 'gemini-flash-latest', 'gemini-2.5-flash'];
+  assert.equal(recommendModel('gemini', g), 'gemini-flash-latest');
+  assert.equal(rankModels('gemini', g).at(-1), 'gemini-robotics-er-2-streaming-preview');
+  assert.equal(recommendModel('compatible', ['imagen-4.0-generate-001', 'mi-modelo']), '');
+  assert.equal(recommendModel('ollama', ['llama3.1', 'qwen2.5']), 'llama3.1');
 });

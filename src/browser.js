@@ -27,7 +27,7 @@ export function browserCandidates() {
 export async function launchBrowser() {
   const errors = [];
   for (const executablePath of browserCandidates()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cyber-cactus-'));
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'salamione-'));
     try {
       const browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu'] });
       return {

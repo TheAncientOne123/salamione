@@ -9,10 +9,13 @@ Cada usuario tiene su cuenta, sus evaluaciones (una por organización) y su prop
 ```bash
 npm install
 cp .env.example .env      # opcional: APP_SECRET, IA del servidor, puerto
-npm start                 # http://localhost:3000
+npm run dev               # desarrollo: http://localhost:3000 con recarga en caliente (Vite)
+npm start                 # producción: compila el frontend (vite build) y sirve dist/
 ```
 
-- `/` landing · `/registro` y `/login` acceso · `/app` aplicación (requiere sesión).
+El frontend es **React 19 + Vite + motion** (animaciones). En desarrollo, Express monta Vite como middleware, así que todo corre en un solo puerto. `npm run dev` reinicia el servidor al cambiar `server.js`, `src/`, `shared/` o `config/`, y Vite recarga la interfaz al cambiar `web/`.
+
+- `/` landing (con enlaces a las páginas oficiales de CIS) · `/registro` y `/login` acceso · `/app` aplicación (requiere sesión).
 - La primera cuenta que se registra hereda la evaluación de la versión anterior (`data/state.json`), si existe.
 - Requiere **Node 22.5 o superior** (usa `node:sqlite`, sin dependencias nativas) y Chrome o Edge instalado para imprimir los PDF (`CHROME_PATH` si no se detecta).
 
@@ -22,8 +25,9 @@ npm start                 # http://localhost:3000
 2. **Conecta tu IA** (botón de estado arriba a la derecha). Sin IA, funciona el motor demo de reglas.
 3. **Carga la evidencia:** con 📎 sube PDF, DOCX, TXT, MD, CSV, JSON o HTML, pega texto, o carga el caso de ejemplo. También puedes **describir la organización en el chat** y pulsar *Generar dashboard con esta descripción* (o pedírselo al chat): tus mensajes se guardan como documento de contexto y las citas se verifican contra ellos.
 4. **Dashboard:** implementación, cobertura, mapa por control, cinco riesgos, roadmap, ficha de contexto y la matriz completa con evidencia. Los botones de cada salvaguarda simulan cambios sin tocar la evidencia.
-5. **Exporta:** *Dashboard en PDF*, *Dashboard en Excel* (hojas Resumen, Controles, Salvaguardas, Riesgos, Roadmap y Contexto) y *Resumen ejecutivo* de una página carta (se verifica que tenga exactamente una página).
-6. **Antes y después:** sube **nueva evidencia** (avance de iniciativas o documento actualizado). SalamiOne propone cambios con citas, tú apruebas o rechazas cada uno, y se guarda una versión nueva. En **Comparar** eliges A y B y obtienes el veredicto (*Mejoró*, *Empeoró*, *Resultado mixto* o *Sin cambios*), la variación por control, las salvaguardas que mejoraron o retrocedieron y los riesgos. La comparación también se exporta a PDF y Excel.
+5. **Fuentes:** la pestaña lista cada archivo, texto pegado o descripción del chat, con su fecha, tamaño, si está en la evaluación actual y en qué versiones se usó. Puedes ver el texto extraído (con búsqueda y separado por página), descargarlo como .txt o eliminarlo. Si hay fuentes sin analizar, ofrece rehacer la evaluación.
+6. **Exporta:** *Dashboard en PDF*, *Dashboard en Excel* (hojas Resumen, Controles, Salvaguardas, Riesgos, Roadmap y Contexto) y *Resumen ejecutivo* de una página carta (se verifica que tenga exactamente una página).
+7. **Versiones, en tres fases:** sube **nueva evidencia** (avance de iniciativas o documento actualizado). SalamiOne propone cambios con citas, tú apruebas o rechazas cada uno y se guarda una versión nueva. En **Versiones**: (1) eliges la versión anterior, (2) eliges la nueva (o el estado actual) y (3) ves el resultado: el veredicto (*Mejoró*, *Empeoró*, *Resultado mixto* o *Sin cambios*), implementación y cobertura antes y después, y el detalle por pestañas (salvaguardas que mejoraron, que empeoraron, controles y riesgos). Cada versión se puede descargar en PDF o Excel, restaurar o eliminar, y la comparación también se exporta.
 
 El tutorial se muestra al primer inicio de sesión y se puede repetir desde el menú de usuario.
 
@@ -75,8 +79,10 @@ La API key se guarda **cifrada (AES-256-GCM)** con `APP_SECRET` y nunca vuelve a
 | `catalog/CIS_Controls_v8.1.md` · `src/catalog.js` | Catálogo de 153 salvaguardas con su IG; único origen de controles y salvaguardas |
 | `src/verify.js` · `src/heuristic.js` | Verificador de citas y motor demo |
 | `src/report.js` · `src/xlsx.js` · `src/onepager.js` · `src/pdfsummary.js` · `src/matrix.js` | Dashboard y comparación en PDF, Excel, resumen de una página, PDF libre desde el chat y CSV |
-| `public/index.html` · `login.html` · `app.html` | Landing, acceso y aplicación |
-| `public/app.js` · `tour.js` · `components.js` · `scoring.js` · `versions.js` | Interfaz, tutorial, componentes compartidos con los PDF, indicadores y comparación con veredicto |
+| `web/` | Frontend React (Vite): `index.html` landing, `login.html` acceso, `app.html` aplicación; `src/app/views/` Chat, Dashboard, Fuentes y Versiones; `src/app/parts/` barra superior, diálogos y tutorial |
+| `shared/scoring.js` · `shared/versions.js` | Indicadores y comparación con veredicto (los usan el servidor y React) |
+| `src/components.js` | Componentes HTML de los PDF |
+| `vite.config.js` · `dist/` | Configuración de Vite y compilado de producción (no se versiona) |
 | `templates/` | Plantillas fijas de los PDF |
 | `samples/` | Caso de ejemplo (Distribuidora Andina S.A.: contexto y avance de iniciativas) |
 | `test/` | `npm test` |
@@ -91,6 +97,7 @@ El agente puede, según lo que pida el usuario: evaluar la documentación, **arm
 |---|---|---|
 | POST | `/api/auth/register` · `/login` · `/logout` · GET `/api/auth/me` | Cuentas y sesión |
 | GET | `/api/state` | Estado de la evaluación activa |
+| GET · DELETE | `/api/documents/:id` · GET `/api/documents/:id/text` | Fuentes: texto extraído, descarga .txt y eliminación |
 | POST · PUT · DELETE | `/api/workspaces[/:id]` · POST `/api/workspaces/:id/activate` | Evaluaciones (nombre e IG) |
 | GET · PUT | `/api/me/ai` · POST `/api/me/ai/models` · `/api/me/ai/test` | Configuración de IA del usuario |
 | POST | `/api/documents` · `/api/documents/text` · `/api/sample/:rol` | Documentos y caso de ejemplo |
@@ -105,4 +112,3 @@ El agente puede, según lo que pida el usuario: evaluar la documentación, **arm
 
 - Los PDF escaneados sin OCR no tienen texto extraíble.
 - Las descripciones del catálogo son resúmenes en español con fines de evaluación documental; el texto oficial es la publicación de CIS. CIS Controls® es marca de Center for Internet Security, Inc.
-- `docs/` conserva la entrega académica original (versión Cyber Cactus) como registro histórico.

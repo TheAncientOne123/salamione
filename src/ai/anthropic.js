@@ -10,7 +10,7 @@ export const ANTHROPIC_DEFAULT_MODEL = 'claude-opus-5-5';
 const FALLBACK_MODELS = new Set(['claude-fable-5-1', 'claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5']);
 const MAX_TOKENS = 64000;
 
-const client = (cfg) => new Anthropic({ apiKey: cfg.apiKey, baseURL: cfg.baseURL || undefined, maxRetries: 2 });
+const client = (cfg) => new Anthropic({ apiKey: cfg.apiKey, baseURL: cfg.baseURL || undefined, maxRetries: cfg.maxRetries ?? 2, timeout: cfg.timeoutMs ?? 10 * 60 * 1000 });
 const textOf = (msg) => msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
 
 export function createAnthropic(cfg) {
@@ -43,18 +43,19 @@ export function createAnthropic(cfg) {
     provider: 'anthropic',
     model,
 
-    async structured({ system, user, schema }) {
+    async structured({ system, user, schema, maxTokens = MAX_TOKENS }) {
       if (useFormat) {
         try {
-          const msg = await send({ model, max_tokens: MAX_TOKENS, system, messages: [{ role: 'user', content: user }], output_config: { format: { type: 'json_schema', schema } } });
+          const msg = await send({ model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }], output_config: { format: { type: 'json_schema', schema } } });
           checkStop(msg);
           return JSON.parse(textOf(msg));
         } catch (e) {
-          if (e?.status !== 400) throw e;
+          // Solo se abandona la salida estructurada si el error es de formato o esquema (no de clave, modelo o saldo).
+          if (e?.status !== 400 || !/output_config|format|schema|json/i.test(e?.message || '')) throw e;
           useFormat = false; // el esquema o el modelo no admiten salida estructurada: se pide JSON en el prompt
         }
       }
-      const msg = await send({ model, max_tokens: MAX_TOKENS, system: `${system}\n\n${schemaInstruction(schema)}`, messages: [{ role: 'user', content: user }] });
+      const msg = await send({ model, max_tokens: maxTokens, system: `${system}\n\n${schemaInstruction(schema)}`, messages: [{ role: 'user', content: user }] });
       checkStop(msg);
       return parseJsonLoose(textOf(msg));
     },

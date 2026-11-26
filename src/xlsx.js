@@ -1,7 +1,7 @@
 // Exportación a Excel (.xlsx): dashboard completo y comparación antes/después.
 // Hojas del dashboard: Resumen · Controles · Salvaguardas · Riesgos · Roadmap · Contexto.
 import ExcelJS from 'exceljs';
-import { STATUS, APPLICABILITY, SEVERITY, EFFORT, INIT_TYPE, RISK_STATE, INIT_STATE, pct } from '../public/scoring.js';
+import { STATUS, APPLICABILITY, SEVERITY, EFFORT, INIT_TYPE, RISK_STATE, INIT_STATE, pct } from '../shared/scoring.js';
 
 const BRAND = 'FF8C1D40';
 const DARK = 'FF1E2126';

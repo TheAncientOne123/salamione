@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { launchBrowser } from './browser.js';
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
-import { STATUS, fmt, pct } from '../public/scoring.js';
-import { esc, legend, kpiCards, indicatorCards, controlCard, contextHtml, risksTable, roadmapTable, changesTable, reportedInitiatives, riskStateChip, statusChip, severityChip } from '../public/components.js';
-import { versionSummary, compareVersions } from '../public/versions.js';
+import { STATUS, fmt, pct } from '../shared/scoring.js';
+import { esc, legend, kpiCards, indicatorCards, controlCard, contextHtml, risksTable, roadmapTable, changesTable, reportedInitiatives, riskStateChip, statusChip, severityChip } from './components.js';
+import { versionSummary, compareVersions } from '../shared/versions.js';
 
 const ROOT = path.resolve('.');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
@@ -41,7 +41,7 @@ function updateSection(d, initial, analysis) {
 export function renderReportHtml(d, { documents = [], catalog, initial = null, analysis = null }) {
   const template = read('templates/reporte.html');
   const css = read('templates/reporte.css');
-  const logo = read('public/logo.svg');
+  const logo = read('web/public/logo.svg');
   const byId = Object.fromEntries(d.safeguards.map((s) => [s.id, s]));
   const st = d.stats || {};
   const v = catalog.values;
@@ -129,7 +129,7 @@ const COMPARE_CSS = `
 
 export function renderComparisonHtml(A, B, c, { company = '', shortName = '' } = {}) {
   const css = read('templates/reporte.css') + COMPARE_CSS;
-  const logo = read('public/logo.svg');
+  const logo = read('web/public/logo.svg');
   const dl = (x, suf = ' pts') => (x == null ? '—' : `<span class="${x > 0 ? 'up' : x < 0 ? 'down' : ''}">${x > 0 ? '+' : ''}${fmt(x)}${suf}</span>`);
   const order = { retroceso: 0, mejora: 1, neutral: 2, nueva: 3, eliminada: 4 };
   const changes = [...c.changes].sort((x, y) => order[x.direction] - order[y.direction] || x.id.localeCompare(y.id, 'es', { numeric: true }));

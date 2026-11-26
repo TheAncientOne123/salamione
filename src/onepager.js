@@ -6,8 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import { launchBrowser } from './browser.js';
-import { STATUS, SEVERITY, EFFORT, pct, fmt } from '../public/scoring.js';
-import { esc } from '../public/components.js';
+import { STATUS, SEVERITY, EFFORT, pct, fmt } from '../shared/scoring.js';
+import { esc } from './components.js';
 
 const read = (p) => fs.readFileSync(path.resolve(p), 'utf8');
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -118,7 +118,7 @@ export function buildOnePagerHtml(d, meta, catalog) {
   const data = {
     titulo: esc(meta.fileName),
     css: read('templates/reporte-1p.css'),
-    logo: read('public/logo.svg'),
+    logo: read('web/public/logo.svg'),
     empresa: esc(meta.company),
     preparadoPor: esc(meta.preparedBy || 'SalamiOne'),
     motor: esc(d.engine),

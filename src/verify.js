@@ -4,7 +4,7 @@
 // - Un estado que exige evidencia (implementado, parcial, no implementado, no aplicable) sin cita verificada
 //   se degrada a "no_verificado": la falta de evidencia nunca se convierte en incumplimiento.
 // - Las afirmaciones de la ficha de contexto sin cita verificada se descartan.
-import { normStatus, EVALUABLE } from '../public/scoring.js';
+import { normStatus, EVALUABLE } from '../shared/scoring.js';
 
 export const norm = (s) =>
   String(s || '')
